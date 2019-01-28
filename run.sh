@@ -2,15 +2,18 @@
 
 set -e
 
-: ${CC:=arm-linux-gnueabihf-gcc}
 readonly BINARY_NAME=calc
-readonly SOURCE_FILES=(\
-  functions.s \
-  calc.c \
+
+readonly SOURCE_FILES=(
+  functions.s
+  calc.c
 )
+
+: ${CC:=arm-linux-gnueabihf-gcc}
 readonly C_OPTS=(
-  -O3 \
+  -O3
 )
+
 
 set -x
 
