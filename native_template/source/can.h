@@ -1,6 +1,8 @@
 //MCP2515 CAN Controller Include File
 //Original by ?? modified by Eugene Rockey
 
+#include <stdint.h>
+
 void spitocan(uint8_t data);
 uint32_t cantospi(void);
 void initCAN(void);
