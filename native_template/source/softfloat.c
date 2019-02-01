@@ -54,7 +54,8 @@ flag float32_is_signaling_nan( float32 a )
  | (The declaration in `softfloat.h' must match the `int8' type here.)
  *----------------------------------------------------------------------------*/
 int8 float_detect_tininess = float_tininess_after_rounding;
-
+signed char float_rounding_mode;
+signed char float_exception_flags;
 
 /*----------------------------------------------------------------------------
  | Returns 1 if the single-precision floating-point value `a' is a NaN;

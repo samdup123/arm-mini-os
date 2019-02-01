@@ -75,7 +75,7 @@ enum {
 /*----------------------------------------------------------------------------
  | Software IEC/IEEE floating-point rounding mode.
  *----------------------------------------------------------------------------*/
-signed char float_rounding_mode;
+extern signed char float_rounding_mode;
 enum {
     float_round_nearest_even = 0,
     float_round_down         = 1,
@@ -86,7 +86,7 @@ enum {
 /*----------------------------------------------------------------------------
  | Software IEC/IEEE floating-point exception flags.
  *----------------------------------------------------------------------------*/
-signed char float_exception_flags;
+extern signed char float_exception_flags;
 enum {
     float_flag_invalid   =  1,
     float_flag_divbyzero =  4,
