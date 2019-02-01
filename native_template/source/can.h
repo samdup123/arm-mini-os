@@ -408,4 +408,4 @@ uint8_t CANreceive(void);
 #define EXIDE_SET      0x08
 #define EXIDE_RESET    0x00
 
-#undef  // CAN_H_
+#endif  // CAN_H_
