@@ -36,6 +36,10 @@
  *  Compiled and tested by Eugene Rockey using OSX Command Line on 9/16/14.
  *	
  */
+
+#ifndef SOFTFLOAT_H_
+#define SOFTFLOAT_H_
+
 /*----------------------------------------------------------------------------
  | Software IEC/IEEE floating-point types.
  *----------------------------------------------------------------------------*/
@@ -133,3 +137,5 @@ enum {
     FALSE = 0,
     TRUE  = 1
 };
+
+#endif  // SOFTFLOAT_H_
