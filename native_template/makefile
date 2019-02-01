@@ -1,6 +1,12 @@
 # The toolchain to use. arm-none-eabi works, but there does exist 
 # arm-bcm2708-linux-gnueabi. ARMGNU ?= arm-none-eabi
 
+CC=arm-none-eabi-gcc
+AS=arm-none-eabi-as
+LD=arm-none-eabi-ld
+OBJCOPY=arm-none-eabi-objcopy
+OBJDUMP=arm-none-eabi-objdump
+
 # The intermediate directory for compiled object files.
 BUILD = build/
 
@@ -34,23 +40,23 @@ rebuild: all
 
 # Rule to make the object files from C source.
 $(BUILD)%.o: $(SOURCE)%.c
-	gcc -I $(SOURCE) $< -c -std=gnu99 -march=armv6 -mtune=arm1176jzf-s -mfloat-abi=hard -ffast-math -o $@
+	$(CC) -I $(SOURCE) $< -c -std=gnu99 -march=armv6 -mtune=arm1176jzf-s -mfloat-abi=hard -ffast-math -o $@
 
 # Rule to make the listing file.
 $(LIST) : $(BUILD)output.elf
-	objdump -d $(BUILD)output.elf > $(LIST)
+	$(OBJDUMP) -d $(BUILD)output.elf > $(LIST)
 
 # Rule to make the image file.
 $(TARGET) : $(BUILD)output.elf
-	objcopy $(BUILD)output.elf -O  binary $(TARGET) 
+	$(OBJCOPY) $(BUILD)output.elf -O  binary $(TARGET) 
 
 # Rule to make the elf file.
 $(BUILD)output.elf : $(OBJECTS) $(LINKER)
-	ld --no-undefined $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf -T $(LINKER)
+	$(LD) --no-undefined $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf -T $(LINKER)
 
 # Rule to make the object files from Assembly sources.
 $(BUILD)%.o: $(SOURCE)%.s
-	as -I $(SOURCE) $< -mfpu=vfpv2 -o $@
+	$(AS) -I $(SOURCE) $< -mfpu=vfpv2 -o $@
 
 # Rule to clean files.
 clean : 
