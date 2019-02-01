@@ -138,7 +138,7 @@ void DATE(void)
             
             
             break;
-		case 'D' | 'd':
+		case 'D' | 'd': {
 			bcm2835_i2c_begin();
 			bcm2835_i2c_setClockDivider(BCM2835_I2C_CLOCK_DIVIDER_2500);
 			bcm2835_i2c_setSlaveAddress(0x68);
@@ -161,6 +161,7 @@ void DATE(void)
 			uart_putc(ones+48);	
 			bcm2835_i2c_end();
 			break;
+		}
 		default:
 			uart_puts(MS4);
 			DATE();
@@ -342,11 +343,12 @@ void CANCOM(void)
 			CANtransmit(0x30);
 			bcm2835_gpio_write(RPI_GPIO_P1_18, HIGH);
 			break;
-		case 'R' | 'r':
+		case 'R' | 'r': {
 			bcm2835_gpio_write(RPI_GPIO_P1_18, LOW);
 			uint8_t data = CANreceive();
 			bcm2835_gpio_write(RPI_GPIO_P1_18, HIGH);
 			break;
+		}
 		default:
 			uart_puts(MS4);
 			CANCOM;
