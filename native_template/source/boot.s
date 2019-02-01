@@ -132,7 +132,3 @@ vfp11_add:
 		FADDS	s2, s2, s1	
 		FMRS	r0, s2
 		MOV	pc, lr
-
-		
-
-
