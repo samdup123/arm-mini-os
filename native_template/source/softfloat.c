@@ -656,7 +656,7 @@ unsigned int ASCII_to_float32(char* in) //Copyright 2014 Eugene Rockey
 }
 
 
-char* float32_to_ASCII(float32 r)
+const char* float32_to_ASCII(float32 r)
 {
 	return "Engineer and fully comment this function.";
 }
