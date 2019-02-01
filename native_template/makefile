@@ -1,60 +1,66 @@
-# The toolchain to use. arm-none-eabi works, but there does exist 
-# arm-bcm2708-linux-gnueabi. ARMGNU ?= arm-none-eabi
-
+# Compilation tools
 CC=arm-none-eabi-gcc
 AS=arm-none-eabi-as
 LD=arm-none-eabi-ld
 OBJCOPY=arm-none-eabi-objcopy
 OBJDUMP=arm-none-eabi-objdump
 
+# Directories
 BUILD_DIR = build
 SOURCE_DIR = source
 
-LIST = kernel.list    # output listing file
-MAP = kernel.map      # output map file
-LINKER = kernel.ld    # linker script
+# Assembler & linker files
+LINKER_SCRIPT = kernel.ld
+LISTING_FILE = kernel.list
+MAP_FILE = kernel.map
 
-TARGET = kernel.img   # name of fully-packaged TinyOS image
+# Output TinyOS image, fully-packaged
+OUTPUT_IMAGE = kernel.img
 
-# The names of all object files that must be generated. Deduced from the 
-# c and assembly code files in source.
+COPTS = \
+  -c \
+  -std=gnu99 \
+  -march=armv6 \
+  -mtune=arm1176jzf-s \
+  -mfloat-abi=hard \
+  -ffast-math
 
 OBJECTS_AS := $(patsubst $(SOURCE_DIR)/%.s,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_DIR)/*.s))
 OBJECTS_GCC := $(patsubst $(SOURCE_DIR)/%.c,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_DIR)/*.c))
 OBJECTS := $(OBJECTS_AS) $(OBJECTS_GCC)
 
-# Rule to make everything.
-all: $(TARGET) $(LIST) $(OBJECTS_GCC)
 
-# Rule to remake everything. Does not include clean.
+
+all: $(OUTPUT_IMAGE) $(LISTING_FILE) $(OBJECTS_GCC)
+
 rebuild: all
 
 # Rule to make the object files from C source.
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
-	$(CC) -I $(SOURCE_DIR) $< -c -std=gnu99 -march=armv6 -mtune=arm1176jzf-s -mfloat-abi=hard -ffast-math -o $@
+	$(CC) -I $(SOURCE_DIR) $< $(COPTS) -o $@
 
 # Rule to make the listing file.
-$(LIST) : $(BUILD_DIR)/output.elf
-	$(OBJDUMP) -d $(BUILD_DIR)/output.elf > $(LIST)
+$(LISTING_FILE): $(BUILD_DIR)/output.elf
+	$(OBJDUMP) -d $(BUILD_DIR)/output.elf > $(LISTING_FILE)
 
 # Rule to make the image file.
-$(TARGET) : $(BUILD_DIR)/output.elf
-	$(OBJCOPY) $(BUILD_DIR)/output.elf -O  binary $(TARGET) 
+$(OUTPUT_IMAGE): $(BUILD_DIR)/output.elf
+	$(OBJCOPY) $(BUILD_DIR)/output.elf -O binary $(OUTPUT_IMAGE)
 
 # Rule to make the elf file.
-$(BUILD_DIR)/output.elf : $(OBJECTS) $(LINKER)
-	$(LD) --no-undefined $(OBJECTS) -Map $(MAP) -o $(BUILD_DIR)/output.elf -T $(LINKER)
+$(BUILD_DIR)/output.elf: $(OBJECTS) $(LINKER_SCRIPT)
+	$(LD) --no-undefined $(OBJECTS) -Map $(MAP_FILE) -o $(BUILD_DIR)/output.elf -T $(LINKER_SCRIPT)
 
 # Rule to make the object files from Assembly sources.
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.s
 	$(AS) -I $(SOURCE_DIR)/ $< -mfpu=vfpv2 -o $@
 
 # Rule to clean files.
-clean : 
-	-rm -f $(BUILD_DIR)/*.o 
+clean:
+	-rm -f $(BUILD_DIR)/*.o
 	-rm -f $(BUILD_DIR)/output.elf
-	-rm -f $(TARGET)
-	-rm -f $(LIST)
-	-rm -f $(MAP)
+	-rm -f $(OUTPUT_IMAGE)
+	-rm -f $(LISTING_FILE)
+	-rm -f $(MAP_FILE)
 
 c : clean
