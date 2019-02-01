@@ -19,7 +19,7 @@ OUTPUT_IMAGE = kernel.img
 
 COPTS = \
   -c \
-  -std=gnu99 \
+  -std=c11 \
   -march=armv6 \
   -mtune=arm1176jzf-s \
   -mfloat-abi=hard \
