@@ -62,7 +62,7 @@ typedef signed int sbits32;
 /*----------------------------------------------------------------------------
  | Software IEC/IEEE floating-point underflow tininess-detection mode.
  *----------------------------------------------------------------------------*/
-int8 float_detect_tininess;
+extern int8 float_detect_tininess;
 enum {
     float_tininess_after_rounding  = 0,
     float_tininess_before_rounding = 1
