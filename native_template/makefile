@@ -1,9 +1,9 @@
 # Compilation tools
-CC=arm-none-eabi-gcc
-AS=arm-none-eabi-as
-LD=arm-none-eabi-ld
-OBJCOPY=arm-none-eabi-objcopy
-OBJDUMP=arm-none-eabi-objdump
+CC=gcc
+AS=as
+LD=ld
+OBJCOPY=objcopy
+OBJDUMP=objdump
 
 # Directories
 BUILD_DIR = build

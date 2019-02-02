@@ -3,6 +3,9 @@
    debug everything that needs debugging
    Add, remove, modify, preserve in order to fullfill project requirements. */
 
+.global main
+main:
+
 .set	Usr32md,	0x10		/* ARM modes */
 .set	FIQ32md,	0x11
 .set	IRQ32md,	0x12

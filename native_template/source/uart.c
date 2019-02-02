@@ -5,8 +5,8 @@
  */
  
 #include <stdint.h>
-#include <mmio.h>
-#include <uart.h>
+#include "mmio.h"
+#include "uart.h"
  
 enum 
 {

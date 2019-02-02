@@ -447,17 +447,16 @@ int calculate(int a, unsigned char operator, int b, int* const remainder) {
   }
 }
 
-typedef struct calculator_config {
+struct calculator_config {
   void (*print_string)(const char*);
   int (*await_input)(char* buffer_in, size_t buffer_size);
   int (*force_quit)(void);
 };
 
 #define CALC_EXPR_BUFFER_SIZE (50)
-#define CALC_RESULT_BUFFER_SIZE \
-  (12)  // 10 = ceil(log10(INT_MAX)),
-        // INTMAX = 2147483647
-        // +1 for sign, +1 for null-termination
+#define CALC_RESULT_BUFFER_SIZE (12)  // 10 = ceil(log10(INT_MAX)),
+                                      // INTMAX = 2147483647
+                                      // +1 for sign, +1 for null-termination
 void calculator(const struct calculator_config* const config) {
   config->print_string("Enter an expression: (a {+|-|*|/} b)");
 
@@ -473,7 +472,8 @@ void calculator(const struct calculator_config* const config) {
     config->await_input(expression_buffer, CALC_EXPR_BUFFER_SIZE);
     int a = 0, b = 0, remainder = -1;
     unsigned char operator= '\0';
-    dieif(scanf_s("%d %c %d", &a, &operator, & b) < 0, "bad expression");
+    dieif(sscanf(expression_buffer, "%d %c %d", &a, &operator, & b) < 0,
+          "bad expression");
 
     // compute & print result
     const int result = calculate(a, operator, b, & remainder);
@@ -505,7 +505,8 @@ int get_input(char* const buffer, const size_t buffer_size) {
     ;
 
   size_t i = 0;
-  for (; (c != '\n') && (i + 1 < buffer_size); ++i, c = uart_readc()) {
+  for (; (c != '\r' || c != '\n') && (i + 1 < buffer_size);
+       ++i, c = uart_readc()) {
     buffer[i] = c;
   }
   buffer[i] = '\0';
@@ -534,14 +535,14 @@ void kernel_main() {
       calc_count = 0;
       return 1;
     }
-    
+
     return 0;
   };
 
   struct calculator_config calc_cfg = {
-    .print_string = uart_puts,
-    .await_input = get_input,
-    .force_quit = force_quit_calc,
+      .print_string = uart_puts,
+      .await_input = get_input,
+      .force_quit = force_quit_calc,
   };
 
   uart_puts("type '" CALC_COMMAND "' to start calculator\n");
