@@ -1,0 +1,7 @@
+add_subdirectory (io)
+add_subdirectory (util)
+add_subdirectory (comms)
+add_subdirectory (container)
+add_subdirectory (driver)
+add_subdirectory (error)
+add_subdirectory (device)
