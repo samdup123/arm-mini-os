@@ -505,7 +505,7 @@ int get_input(char* const buffer, const size_t buffer_size) {
     ;
 
   size_t i = 0;
-  for (; (c != '\r' || c != '\n') && (i + 1 < buffer_size);
+  for (; (c != '\r' || c != '\n' || c != '\0') && (i + 1 < buffer_size);
        ++i, c = uart_readc()) {
     buffer[i] = c;
   }
