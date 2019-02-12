@@ -4,7 +4,9 @@
 // Add, remove, modify, preserve in order to fulfill project requirements.
 
 #include <stdint.h>
+#include <stdio.h>
 #include "bcm2835.h"
+#include "calc.h"
 #include "can.h"
 #include "math.h"
 #include "mmio.h"
@@ -79,9 +81,8 @@ volatile uint32_t* bcm2835_st = (uint32_t*)BCM2835_ST_BASE;
 
 void testdelay(void) {
   int count = 0xFFFFF;
-  while (count > 0) {
-    count = count - 1;
-  }
+  while (count-- > 0)
+    ;
 }
 
 void enable_irq_57(void) { mmio_write(0x2000B214, 0x02000000); }
@@ -430,8 +431,23 @@ void kernel_main() {
   }
 }
 
+int _write(const int fd, const uint8_t* const buffer, const size_t count) {
+#define STDOUT_FILE_DESCRIPTOR (0)
+  switch (fd) {
+    case STDOUT_FILE_DESCRIPTOR: {
+      for (size_t pos = 0; pos < count; ++pos) {
+        uart_putc(buffer[pos]);
+      }
+    }
+    default:
+      die(uart_puts, "got non-`stdout` file descriptor");
+  }
+#undef STDOUT_FILE_DESCRIPTOR
+}
+
 void irq_handler(void) {
   uart_puts("interrupted: in irq_handler()");
+  printf("using printf");
   uint8_t c = uart_readc();
   uart_putc(' ');
   uart_putc(c);
