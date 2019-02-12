@@ -45,7 +45,7 @@ int calculator(void (*print_fn)(const char *)) {
   // continuously evaluate expressions, until a signal
   while (1) {
     // prompt user for the expression
-    printf("\n> ");
+    print_fn("\n> ");
 
     // parse the expression
     // dieif(scanf("%d %c %d", &a, &operator, &b) < 0, "bad expression");
