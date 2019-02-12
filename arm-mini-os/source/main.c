@@ -431,6 +431,7 @@ void kernel_main() {
 }
 
 void irq_handler(void) {
+  uart_puts("interrupted: in irq_handler()");
   uint8_t c = uart_readc();
   uart_putc(' ');
   uart_putc(c);
