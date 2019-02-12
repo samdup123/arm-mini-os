@@ -1,0 +1,6 @@
+# dirs to ignore
+**/build/*
+
+# use .gitkeep to permit empty dirs from above
+!.gitkeep
+
