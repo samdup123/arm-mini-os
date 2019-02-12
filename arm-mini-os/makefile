@@ -18,7 +18,6 @@ MAP_FILE = kernel.map
 OUTPUT_IMAGE = kernel.img
 
 COPTS = \
-  -c \
   -std=c11 \
   -march=armv6 \
   -mtune=arm1176jzf-s \
@@ -37,7 +36,7 @@ rebuild: all
 
 # Rule to make the object files from C source.
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
-	$(CC) -I $(SOURCE_DIR) $< $(COPTS) -o $@
+	$(CC) -I $(SOURCE_DIR) $< -c $(COPTS) -o $@
 
 # Rule to make the listing file.
 $(LISTING_FILE): $(BUILD_DIR)/output.elf
