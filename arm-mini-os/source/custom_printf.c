@@ -224,11 +224,14 @@ static size_t _ntoa_long(out_fct_type out, char* buffer, size_t idx,
   // write if precision != 0 and value is != 0
   if (!(flags & FLAGS_PRECISION) || value) {
     do {
-      const char digit = (char)(value % base);
+      dieif(base != 10, uart_puts,
+            "only base 10 number serialisation is supported, a non-10 base was "
+            "provided to _ntoa_long");
+      const char digit = (char)(value % 10);  // base);
       buf[len++] = digit < 10
                        ? '0' + digit
                        : (flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10;
-      value /= base;
+      value /= 10;  // base;
     } while (value && (len < PRINTF_NTOA_BUFFER_SIZE));
   }
 
@@ -254,11 +257,14 @@ static size_t _ntoa_long_long(out_fct_type out, char* buffer, size_t idx,
   // write if precision != 0 and value is != 0
   if (!(flags & FLAGS_PRECISION) || value) {
     do {
-      const char digit = (char)(value % base);
+      dieif(base != 10, uart_puts,
+            "only base 10 number serialisation is supported, a non-10 base was "
+            "provided to _ntoa_long_long");
+      const char digit = (char)(value % 10);  // base);
       buf[len++] = digit < 10
                        ? '0' + digit
                        : (flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10;
-      value /= base;
+      value /= 10;  // base;
     } while (value && (len < PRINTF_NTOA_BUFFER_SIZE));
   }
 
