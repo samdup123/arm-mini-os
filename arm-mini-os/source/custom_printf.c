@@ -30,12 +30,6 @@
 #define PRINTF_SUPPORT_FLOAT
 #endif
 
-// support for the long long types (%llu or %p)
-// default: activated
-#ifndef PRINTF_DISABLE_SUPPORT_LONG_LONG
-#define PRINTF_SUPPORT_LONG_LONG
-#endif
-
 // support for the ptrdiff_t type (%t)
 // ptrdiff_t is normally defined in <stddef.h> as long or long long type
 // default: activated
@@ -238,40 +232,6 @@ static size_t _ntoa_long(out_fct_type out, char* buffer, size_t idx,
   return _ntoa_format(out, buffer, idx, maxlen, buf, len, negative,
                       (unsigned int)base, prec, width, flags);
 }
-
-// internal itoa for 'long long' type
-#if defined(PRINTF_SUPPORT_LONG_LONG)
-static size_t _ntoa_long_long(out_fct_type out, char* buffer, size_t idx,
-                              size_t maxlen, unsigned long long value,
-                              bool negative, unsigned long long base,
-                              unsigned int prec, unsigned int width,
-                              unsigned int flags) {
-  char buf[PRINTF_NTOA_BUFFER_SIZE];
-  size_t len = 0U;
-
-  // no hash for 0 values
-  if (!value) {
-    flags &= ~FLAGS_HASH;
-  }
-
-  // write if precision != 0 and value is != 0
-  if (!(flags & FLAGS_PRECISION) || value) {
-    do {
-      dieif(base != 10, uart_puts,
-            "only base 10 number serialisation is supported, a non-10 base was "
-            "provided to _ntoa_long_long");
-      const char digit = (char)(value % 10);  // base);
-      buf[len++] = digit < 10
-                       ? '0' + digit
-                       : (flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10;
-      value /= 10;  // base;
-    } while (value && (len < PRINTF_NTOA_BUFFER_SIZE));
-  }
-
-  return _ntoa_format(out, buffer, idx, maxlen, buf, len, negative,
-                      (unsigned int)base, prec, width, flags);
-}
-#endif  // PRINTF_SUPPORT_LONG_LONG
 
 #if defined(PRINTF_SUPPORT_FLOAT)
 static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen,
@@ -586,13 +546,8 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         if ((*format == 'i') || (*format == 'd')) {
           // signed
           if (flags & FLAGS_LONG_LONG) {
-#if defined(PRINTF_SUPPORT_LONG_LONG)
-            const long long value = va_arg(va, long long);
-            idx = _ntoa_long_long(
-                out, buffer, idx, maxlen,
-                (unsigned long long)(value > 0 ? value : 0 - value), value < 0,
-                base, precision, width, flags);
-#endif
+            die(uart_puts,
+                "type `long long` not supported for custom printf (signed)");
           } else if (flags & FLAGS_LONG) {
             const long value = va_arg(va, long);
             idx = _ntoa_long(out, buffer, idx, maxlen,
@@ -611,11 +566,8 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         } else {
           // unsigned
           if (flags & FLAGS_LONG_LONG) {
-#if defined(PRINTF_SUPPORT_LONG_LONG)
-            idx = _ntoa_long_long(out, buffer, idx, maxlen,
-                                  va_arg(va, unsigned long long), false, base,
-                                  precision, width, flags);
-#endif
+            die(uart_puts,
+                "type `long long` not supported for custom printf (unsigned)");
           } else if (flags & FLAGS_LONG) {
             idx =
                 _ntoa_long(out, buffer, idx, maxlen, va_arg(va, unsigned long),
@@ -691,20 +643,9 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
       case 'p': {
         width = sizeof(void*) * 2U;
         flags |= FLAGS_ZEROPAD | FLAGS_UPPERCASE;
-#if defined(PRINTF_SUPPORT_LONG_LONG)
-        const bool is_ll = sizeof(uintptr_t) == sizeof(long long);
-        if (is_ll) {
-          idx = _ntoa_long_long(out, buffer, idx, maxlen,
-                                (uintptr_t)va_arg(va, void*), false, 16U,
-                                precision, width, flags);
-        } else {
-#endif
-          idx = _ntoa_long(out, buffer, idx, maxlen,
-                           (unsigned long)((uintptr_t)va_arg(va, void*)), false,
-                           16U, precision, width, flags);
-#if defined(PRINTF_SUPPORT_LONG_LONG)
-        }
-#endif
+        idx = _ntoa_long(out, buffer, idx, maxlen,
+                         (unsigned long)((uintptr_t)va_arg(va, void*)), false,
+                         16U, precision, width, flags);
         format++;
         break;
       }
