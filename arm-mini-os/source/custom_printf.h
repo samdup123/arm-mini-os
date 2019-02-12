@@ -1,12 +1,16 @@
 #ifndef CUSTOME_PRINTF_H_
 #define CUSTOME_PRINTF_H_
 
+#include "uart.h"
+
 #include <stdarg.h>
 #include <stddef.h>
 
-void _putchar(char character);
+// This is the crux of the printf implementation for this lab.
+// Synchronously writes a byte to serial.
+void _putchar(char c) { uart_putc((uint8_t)c); }
 
-#define printf printf_
+#define uart_printf printf_
 int printf_(const char* format, ...);
 
 #define sprintf sprintf_

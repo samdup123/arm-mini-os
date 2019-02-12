@@ -1,6 +1,8 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#define nullptr 0
+
 // terminates the program with a custom message
 void die(void (*print_fn)(const char *), const char *msg) {
   const char *const error_message = msg ? msg : "unspecified error";
