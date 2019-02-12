@@ -15,6 +15,7 @@ void dieif(int should_die, void (*print_fn)(const char *), const char *msg) {
 extern int add(int a, int b),  // --> a + b
     sub(int a, int b),         // --> a - b
     mul(int a, int b),         // --> a * b
+    // TODO: add assembly function for this
     div_remainder(int a, int b,
                   int *remainder);  // --> a / b, remainder=(a % b)
 
@@ -29,7 +30,9 @@ int calculate(int a, unsigned char operator, int b, int *const remainder,
     case '*':
       return mul(a, b);
     case '/':
-      return div_remainder(a, b, remainder);
+      // TODO: support division
+      die(print_fn, "division not implemented");
+      // return div_remainder(a, b, remainder);
     default:
       die(print_fn, "operator not recognized");
   }
