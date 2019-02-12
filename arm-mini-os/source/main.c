@@ -8,6 +8,7 @@
 #include "bcm2835.h"
 #include "calc.h"
 #include "can.h"
+#include "custom_printf.h"
 #include "math.h"
 #include "mmio.h"
 #include "softfloat.h"
@@ -447,6 +448,7 @@ int _write(const int fd, const uint8_t* const buffer, const size_t count) {
 
 void irq_handler(void) {
   uart_puts("interrupted: in irq_handler()");
+  uart_printf("%d", 4);
   uint8_t c = uart_readc();
   uart_putc(' ');
   uart_putc(c);
