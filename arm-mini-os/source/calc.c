@@ -57,7 +57,7 @@ int calculator(void (*print_fn)(const char *)) {
     // printf("%d", calculate(a, operator, b, &remainder));
     if (remainder >= 0) {  // if remainder was set to a sane value
       // printf(" [remainder = %d]", remainder);  // express the remainder
-      remainder = -1;                          // set back to a not-sane value
+      remainder = -1;  // set back to a not-sane value
     }
   }
 }

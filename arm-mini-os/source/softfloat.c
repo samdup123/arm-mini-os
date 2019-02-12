@@ -1,8 +1,8 @@
 /*============================================================================
- 
+
  This C source file is part of the SoftFloat IEC/IEEE Floating-point Arithmetic
  Package, Release 2b.
- 
+
  Written by John R. Hauser.  This work was made possible in part by the
  International Computer Science Institute, located at Suite 600, 1947 Center
  Street, Berkeley, California 94704.  Funding was partially provided by the
@@ -12,7 +12,7 @@
  overseen by Profs. Nelson Morgan and John Wawrzynek.  More information
  is available through the Web page `http://www.cs.berkeley.edu/~jhauser/
  arithmetic/SoftFloat.html'.
- 
+
  THIS SOFTWARE IS DISTRIBUTED AS IS, FOR FREE.  Although reasonable effort has
  been made to avoid it, THIS SOFTWARE MAY CONTAIN FAULTS THAT WILL AT TIMES
  RESULT IN INCORRECT BEHAVIOR.  USE OF THIS SOFTWARE IS RESTRICTED TO PERSONS
@@ -21,19 +21,19 @@
  EFFECTIVELY INDEMNIFY JOHN HAUSER AND THE INTERNATIONAL COMPUTER SCIENCE
  INSTITUTE (possibly via similar legal warning) AGAINST ALL LOSSES, COSTS, OR
  OTHER PROBLEMS INCURRED BY THEIR CUSTOMERS AND CLIENTS DUE TO THE SOFTWARE.
- 
+
  Derivative works are acceptable, even for commercial purposes, so long as
  (1) the source code for the derivative work includes prominent notice that
  the work is derivative, and (2) the source code includes prominent notice with
  these four paragraphs for those parts of this code that are retained.
- 
+
  =============================================================================*/
 /*
  *  softfloat.c
- *  
+ *
  *	A derivative work.
  *  Compiled and tested by Eugene Rockey using OSX Command line on 9/16/14.
-*/
+ */
 
 #include "softfloat.h"
 
@@ -42,11 +42,8 @@
  | NaN; otherwise returns 0.
  *----------------------------------------------------------------------------*/
 
-flag float32_is_signaling_nan( float32 a )
-{
-	
-    return ( ( ( a>>22 ) & 0x1FF ) == 0x1FE ) && ( a & 0x003FFFFF );
-	
+flag float32_is_signaling_nan(float32 a) {
+  return (((a >> 22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
 }
 
 /*----------------------------------------------------------------------------
@@ -62,47 +59,25 @@ signed char float_exception_flags;
  | otherwise returns 0.
  *----------------------------------------------------------------------------*/
 
-flag float32_is_nan( float32 a )
-{
-	
-    return ( 0xFF000000 < (bits32) ( a<<1 ) );
-	
-}
-
-
+flag float32_is_nan(float32 a) { return (0xFF000000 < (bits32)(a << 1)); }
 
 /*----------------------------------------------------------------------------
  | Returns the fraction bits of the single-precision floating-point value `a'.
  *----------------------------------------------------------------------------*/
 
-bits32 extractFloat32Frac( float32 a )
-{
-	
-    return a & 0x007FFFFF;
-	
-}
+bits32 extractFloat32Frac(float32 a) { return a & 0x007FFFFF; }
 
 /*----------------------------------------------------------------------------
  | Returns the exponent bits of the single-precision floating-point value `a'.
  *----------------------------------------------------------------------------*/
 
-int16 extractFloat32Exp( float32 a )
-{
-	
-    return ( a>>23 ) & 0xFF;
-	
-}
+int16 extractFloat32Exp(float32 a) { return (a >> 23) & 0xFF; }
 
 /*----------------------------------------------------------------------------
  | Returns the sign bit of the single-precision floating-point value `a'.
  *----------------------------------------------------------------------------*/
 
-flag extractFloat32Sign( float32 a )
-{
-	
-    return a>>31;
-	
-}
+flag extractFloat32Sign(float32 a) { return a >> 31; }
 
 /*----------------------------------------------------------------------------
  | Takes two single-precision floating-point values `a' and `b', one of which
@@ -110,32 +85,28 @@ flag extractFloat32Sign( float32 a )
  | signaling NaN, the invalid exception is raised.
  *----------------------------------------------------------------------------*/
 
-static float32 propagateFloat32NaN( float32 a, float32 b )
-{
-    flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
-	
-    aIsNaN = float32_is_nan( a );
-    aIsSignalingNaN = float32_is_signaling_nan( a );
-    bIsNaN = float32_is_nan( b );
-    bIsSignalingNaN = float32_is_signaling_nan( b );
-    a |= 0x00400000;
-    b |= 0x00400000;
-    if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( float_flag_invalid );
-    if ( aIsSignalingNaN ) {
-        if ( bIsSignalingNaN ) goto returnLargerSignificand;
-        return bIsNaN ? b : a;
-    }
-    else if ( aIsNaN ) {
-        if ( bIsSignalingNaN | ! bIsNaN ) return a;
-	returnLargerSignificand:
-        if ( (bits32) ( a<<1 ) < (bits32) ( b<<1 ) ) return b;
-        if ( (bits32) ( b<<1 ) < (bits32) ( a<<1 ) ) return a;
-        return ( a < b ) ? a : b;
-    }
-    else {
-        return b;
-    }
-	
+static float32 propagateFloat32NaN(float32 a, float32 b) {
+  flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
+
+  aIsNaN = float32_is_nan(a);
+  aIsSignalingNaN = float32_is_signaling_nan(a);
+  bIsNaN = float32_is_nan(b);
+  bIsSignalingNaN = float32_is_signaling_nan(b);
+  a |= 0x00400000;
+  b |= 0x00400000;
+  if (aIsSignalingNaN | bIsSignalingNaN) float_raise(float_flag_invalid);
+  if (aIsSignalingNaN) {
+    if (bIsSignalingNaN) goto returnLargerSignificand;
+    return bIsNaN ? b : a;
+  } else if (aIsNaN) {
+    if (bIsSignalingNaN | !bIsNaN) return a;
+  returnLargerSignificand:
+    if ((bits32)(a << 1) < (bits32)(b << 1)) return b;
+    if ((bits32)(b << 1) < (bits32)(a << 1)) return a;
+    return (a < b) ? a : b;
+  } else {
+    return b;
+  }
 }
 
 /*----------------------------------------------------------------------------
@@ -147,21 +118,17 @@ static float32 propagateFloat32NaN( float32 a, float32 b )
  | The result is stored in the location pointed to by `zPtr'.
  *----------------------------------------------------------------------------*/
 
-void shift32RightJamming( bits32 a, int16 count, bits32 *zPtr )
-{
-    bits32 z;
-	
-    if ( count == 0 ) {
-        z = a;
-    }
-    else if ( count < 32 ) {
-        z = ( a>>count ) | ( ( a<<( ( - count ) & 31 ) ) != 0 );
-    }
-    else {
-        z = ( a != 0 );
-    }
-    *zPtr = z;
-	
+void shift32RightJamming(bits32 a, int16 count, bits32* zPtr) {
+  bits32 z;
+
+  if (count == 0) {
+    z = a;
+  } else if (count < 32) {
+    z = (a >> count) | ((a << ((-count) & 31)) != 0);
+  } else {
+    z = (a != 0);
+  }
+  *zPtr = z;
 }
 
 /*----------------------------------------------------------------------------
@@ -175,13 +142,9 @@ void shift32RightJamming( bits32 a, int16 count, bits32 *zPtr )
  | significand.
  *----------------------------------------------------------------------------*/
 
-float32 packFloat32( flag zSign, int16 zExp, bits32 zSig )
-{
-	
-    return ( ( (bits32) zSign )<<31 ) + ( ( (bits32) zExp )<<23 ) + zSig;
-	
+float32 packFloat32(flag zSign, int16 zExp, bits32 zSig) {
+  return (((bits32)zSign) << 31) + (((bits32)zExp) << 23) + zSig;
 }
-
 
 /*----------------------------------------------------------------------------
  | Takes an abstract floating-point value having sign `zSign', exponent `zExp',
@@ -205,56 +168,48 @@ float32 packFloat32( flag zSign, int16 zExp, bits32 zSig )
  | Binary Floating-Point Arithmetic.
  *----------------------------------------------------------------------------*/
 
-static float32 roundAndPackFloat32( flag zSign, int16 zExp, bits32 zSig )
-{
-    int8 roundingMode;
-    flag roundNearestEven;
-    int8 roundIncrement, roundBits;
-    flag isTiny;
-	
-    roundingMode = float_rounding_mode;
-    roundNearestEven = roundingMode == float_round_nearest_even;
-    roundIncrement = 0x40;
-    if ( ! roundNearestEven ) {
-        if ( roundingMode == float_round_to_zero ) {
-            roundIncrement = 0;
-        }
-        else {
-            roundIncrement = 0x7F;
-            if ( zSign ) {
-                if ( roundingMode == float_round_up ) roundIncrement = 0;
-            }
-            else {
-                if ( roundingMode == float_round_down ) roundIncrement = 0;
-            }
-        }
+static float32 roundAndPackFloat32(flag zSign, int16 zExp, bits32 zSig) {
+  int8 roundingMode;
+  flag roundNearestEven;
+  int8 roundIncrement, roundBits;
+  flag isTiny;
+
+  roundingMode = float_rounding_mode;
+  roundNearestEven = roundingMode == float_round_nearest_even;
+  roundIncrement = 0x40;
+  if (!roundNearestEven) {
+    if (roundingMode == float_round_to_zero) {
+      roundIncrement = 0;
+    } else {
+      roundIncrement = 0x7F;
+      if (zSign) {
+        if (roundingMode == float_round_up) roundIncrement = 0;
+      } else {
+        if (roundingMode == float_round_down) roundIncrement = 0;
+      }
     }
-    roundBits = zSig & 0x7F;
-    if ( 0xFD <= (bits16) zExp ) {
-        if (    ( 0xFD < zExp )
-			|| (    ( zExp == 0xFD )
-				&& ( (sbits32) ( zSig + roundIncrement ) < 0 ) )
-			) {
-            float_raise( float_flag_overflow | float_flag_inexact );
-            return packFloat32( zSign, 0xFF, 0 ) - ( roundIncrement == 0 );
-        }
-        if ( zExp < 0 ) {
-            isTiny =
-			( float_detect_tininess == float_tininess_before_rounding )
-			|| ( zExp < -1 )
-			|| ( zSig + roundIncrement < 0x80000000 );
-            shift32RightJamming( zSig, - zExp, &zSig );
-            zExp = 0;
-            roundBits = zSig & 0x7F;
-            if ( isTiny && roundBits ) float_raise( float_flag_underflow );
-        }
+  }
+  roundBits = zSig & 0x7F;
+  if (0xFD <= (bits16)zExp) {
+    if ((0xFD < zExp) ||
+        ((zExp == 0xFD) && ((sbits32)(zSig + roundIncrement) < 0))) {
+      float_raise(float_flag_overflow | float_flag_inexact);
+      return packFloat32(zSign, 0xFF, 0) - (roundIncrement == 0);
     }
-    if ( roundBits ) float_exception_flags |= float_flag_inexact;
-    zSig = ( zSig + roundIncrement )>>7;
-    zSig &= ~ ( ( ( roundBits ^ 0x40 ) == 0 ) & roundNearestEven );
-    if ( zSig == 0 ) zExp = 0;
-    return packFloat32( zSign, zExp, zSig );
-	
+    if (zExp < 0) {
+      isTiny = (float_detect_tininess == float_tininess_before_rounding) ||
+               (zExp < -1) || (zSig + roundIncrement < 0x80000000);
+      shift32RightJamming(zSig, -zExp, &zSig);
+      zExp = 0;
+      roundBits = zSig & 0x7F;
+      if (isTiny && roundBits) float_raise(float_flag_underflow);
+    }
+  }
+  if (roundBits) float_exception_flags |= float_flag_inexact;
+  zSig = (zSig + roundIncrement) >> 7;
+  zSig &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
+  if (zSig == 0) zExp = 0;
+  return packFloat32(zSign, zExp, zSig);
 }
 
 /*----------------------------------------------------------------------------
@@ -265,67 +220,61 @@ static float32 roundAndPackFloat32( flag zSign, int16 zExp, bits32 zSig )
  | Floating-Point Arithmetic.
  *----------------------------------------------------------------------------*/
 
-static float32 addFloat32Sigs( float32 a, float32 b, flag zSign )
-{
-    int16 aExp, bExp, zExp;
-    bits32 aSig, bSig, zSig;
-    int16 expDiff;
-	
-    aSig = extractFloat32Frac( a );
-    aExp = extractFloat32Exp( a );
-    bSig = extractFloat32Frac( b );
-    bExp = extractFloat32Exp( b );
-    expDiff = aExp - bExp;
-    aSig <<= 6;
-    bSig <<= 6;
-    if ( 0 < expDiff ) {
-        if ( aExp == 0xFF ) {
-            if ( aSig ) return propagateFloat32NaN( a, b );
-            return a;
-        }
-        if ( bExp == 0 ) {
-            --expDiff;
-        }
-        else {
-            bSig |= 0x20000000;
-        }
-        shift32RightJamming( bSig, expDiff, &bSig );
-        zExp = aExp;
+static float32 addFloat32Sigs(float32 a, float32 b, flag zSign) {
+  int16 aExp, bExp, zExp;
+  bits32 aSig, bSig, zSig;
+  int16 expDiff;
+
+  aSig = extractFloat32Frac(a);
+  aExp = extractFloat32Exp(a);
+  bSig = extractFloat32Frac(b);
+  bExp = extractFloat32Exp(b);
+  expDiff = aExp - bExp;
+  aSig <<= 6;
+  bSig <<= 6;
+  if (0 < expDiff) {
+    if (aExp == 0xFF) {
+      if (aSig) return propagateFloat32NaN(a, b);
+      return a;
     }
-    else if ( expDiff < 0 ) {
-        if ( bExp == 0xFF ) {
-            if ( bSig ) return propagateFloat32NaN( a, b );
-            return packFloat32( zSign, 0xFF, 0 );
-        }
-        if ( aExp == 0 ) {
-            ++expDiff;
-        }
-        else {
-            aSig |= 0x20000000;
-        }
-        shift32RightJamming( aSig, - expDiff, &aSig );
-        zExp = bExp;
+    if (bExp == 0) {
+      --expDiff;
+    } else {
+      bSig |= 0x20000000;
     }
-    else {
-        if ( aExp == 0xFF ) {
-            if ( aSig | bSig ) return propagateFloat32NaN( a, b );
-            return a;
-        }
-        if ( aExp == 0 ) return packFloat32( zSign, 0, ( aSig + bSig )>>6 );
-        zSig = 0x40000000 + aSig + bSig;
-        zExp = aExp;
-        goto roundAndPack;
+    shift32RightJamming(bSig, expDiff, &bSig);
+    zExp = aExp;
+  } else if (expDiff < 0) {
+    if (bExp == 0xFF) {
+      if (bSig) return propagateFloat32NaN(a, b);
+      return packFloat32(zSign, 0xFF, 0);
     }
-    aSig |= 0x20000000;
-    zSig = ( aSig + bSig )<<1;
-    --zExp;
-    if ( (sbits32) zSig < 0 ) {
-        zSig = aSig + bSig;
-        ++zExp;
+    if (aExp == 0) {
+      ++expDiff;
+    } else {
+      aSig |= 0x20000000;
     }
+    shift32RightJamming(aSig, -expDiff, &aSig);
+    zExp = bExp;
+  } else {
+    if (aExp == 0xFF) {
+      if (aSig | bSig) return propagateFloat32NaN(a, b);
+      return a;
+    }
+    if (aExp == 0) return packFloat32(zSign, 0, (aSig + bSig) >> 6);
+    zSig = 0x40000000 + aSig + bSig;
+    zExp = aExp;
+    goto roundAndPack;
+  }
+  aSig |= 0x20000000;
+  zSig = (aSig + bSig) << 1;
+  --zExp;
+  if ((sbits32)zSig < 0) {
+    zSig = aSig + bSig;
+    ++zExp;
+  }
 roundAndPack:
-    return roundAndPackFloat32( zSign, zExp, zSig );
-	
+  return roundAndPackFloat32(zSign, zExp, zSig);
 }
 
 /*----------------------------------------------------------------------------
@@ -335,52 +284,39 @@ roundAndPack:
  | should be simply `float_exception_flags |= flags;'.
  *----------------------------------------------------------------------------*/
 
-void float_raise( int8 flags )
-{
-	
-    float_exception_flags |= flags;
-	
-}
+void float_raise(int8 flags) { float_exception_flags |= flags; }
 
 /*----------------------------------------------------------------------------
  | Returns the number of leading 0 bits before the most-significant 1 bit of
  | `a'.  If `a' is zero, 32 is returned.
  *----------------------------------------------------------------------------*/
 
-static int8 countLeadingZeros32( bits32 a )
-{
-    static const int8 countLeadingZerosHigh[] = {
-        8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    };
-    int8 shiftCount;
-	
-    shiftCount = 0;
-    if ( a < 0x10000 ) {
-        shiftCount += 16;
-        a <<= 16;
-    }
-    if ( a < 0x1000000 ) {
-        shiftCount += 8;
-        a <<= 8;
-    }
-    shiftCount += countLeadingZerosHigh[ a>>24 ];
-    return shiftCount;
-	
+static int8 countLeadingZeros32(bits32 a) {
+  static const int8 countLeadingZerosHigh[] = {
+      8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int8 shiftCount;
+
+  shiftCount = 0;
+  if (a < 0x10000) {
+    shiftCount += 16;
+    a <<= 16;
+  }
+  if (a < 0x1000000) {
+    shiftCount += 8;
+    a <<= 8;
+  }
+  shiftCount += countLeadingZerosHigh[a >> 24];
+  return shiftCount;
 }
 
 /*----------------------------------------------------------------------------
@@ -392,13 +328,12 @@ static int8 countLeadingZeros32( bits32 a )
  | floating-point exponent.
  *----------------------------------------------------------------------------*/
 
-static float32 normalizeRoundAndPackFloat32( flag zSign, int16 zExp, bits32 zSig )
-{
-    int8 shiftCount;
-	
-    shiftCount = countLeadingZeros32( zSig ) - 1;
-    return roundAndPackFloat32( zSign, zExp - shiftCount, zSig<<shiftCount );
-	
+static float32 normalizeRoundAndPackFloat32(flag zSign, int16 zExp,
+                                            bits32 zSig) {
+  int8 shiftCount;
+
+  shiftCount = countLeadingZeros32(zSig) - 1;
+  return roundAndPackFloat32(zSign, zExp - shiftCount, zSig << shiftCount);
 }
 
 /*----------------------------------------------------------------------------
@@ -409,72 +344,68 @@ static float32 normalizeRoundAndPackFloat32( flag zSign, int16 zExp, bits32 zSig
  | Standard for Binary Floating-Point Arithmetic.
  *----------------------------------------------------------------------------*/
 
-static float32 subFloat32Sigs( float32 a, float32 b, flag zSign )
-{
-    int16 aExp, bExp, zExp;
-    bits32 aSig, bSig, zSig;
-    int16 expDiff;
-	float32 float32_default_nan = 0xFFC00000;
-	
-    aSig = extractFloat32Frac( a );
-    aExp = extractFloat32Exp( a );
-    bSig = extractFloat32Frac( b );
-    bExp = extractFloat32Exp( b );
-    expDiff = aExp - bExp;
-    aSig <<= 7;
-    bSig <<= 7;
-    if ( 0 < expDiff ) goto aExpBigger;
-    if ( expDiff < 0 ) goto bExpBigger;
-    if ( aExp == 0xFF ) {
-        if ( aSig | bSig ) return propagateFloat32NaN( a, b );
-        float_raise( float_flag_invalid );
-        return float32_default_nan;
-    }
-    if ( aExp == 0 ) {
-        aExp = 1;
-        bExp = 1;
-    }
-    if ( bSig < aSig ) goto aBigger;
-    if ( aSig < bSig ) goto bBigger;
-    return packFloat32( float_rounding_mode == float_round_down, 0, 0 );
+static float32 subFloat32Sigs(float32 a, float32 b, flag zSign) {
+  int16 aExp, bExp, zExp;
+  bits32 aSig, bSig, zSig;
+  int16 expDiff;
+  float32 float32_default_nan = 0xFFC00000;
+
+  aSig = extractFloat32Frac(a);
+  aExp = extractFloat32Exp(a);
+  bSig = extractFloat32Frac(b);
+  bExp = extractFloat32Exp(b);
+  expDiff = aExp - bExp;
+  aSig <<= 7;
+  bSig <<= 7;
+  if (0 < expDiff) goto aExpBigger;
+  if (expDiff < 0) goto bExpBigger;
+  if (aExp == 0xFF) {
+    if (aSig | bSig) return propagateFloat32NaN(a, b);
+    float_raise(float_flag_invalid);
+    return float32_default_nan;
+  }
+  if (aExp == 0) {
+    aExp = 1;
+    bExp = 1;
+  }
+  if (bSig < aSig) goto aBigger;
+  if (aSig < bSig) goto bBigger;
+  return packFloat32(float_rounding_mode == float_round_down, 0, 0);
 bExpBigger:
-    if ( bExp == 0xFF ) {
-        if ( bSig ) return propagateFloat32NaN( a, b );
-        return packFloat32( zSign ^ 1, 0xFF, 0 );
-    }
-    if ( aExp == 0 ) {
-        ++expDiff;
-    }
-    else {
-        aSig |= 0x40000000;
-    }
-    shift32RightJamming( aSig, - expDiff, &aSig );
-    bSig |= 0x40000000;
-bBigger:
-    zSig = bSig - aSig;
-    zExp = bExp;
-    zSign ^= 1;
-    goto normalizeRoundAndPack;
-aExpBigger:
-    if ( aExp == 0xFF ) {
-        if ( aSig ) return propagateFloat32NaN( a, b );
-        return a;
-    }
-    if ( bExp == 0 ) {
-        --expDiff;
-    }
-    else {
-        bSig |= 0x40000000;
-    }
-    shift32RightJamming( bSig, expDiff, &bSig );
+  if (bExp == 0xFF) {
+    if (bSig) return propagateFloat32NaN(a, b);
+    return packFloat32(zSign ^ 1, 0xFF, 0);
+  }
+  if (aExp == 0) {
+    ++expDiff;
+  } else {
     aSig |= 0x40000000;
+  }
+  shift32RightJamming(aSig, -expDiff, &aSig);
+  bSig |= 0x40000000;
+bBigger:
+  zSig = bSig - aSig;
+  zExp = bExp;
+  zSign ^= 1;
+  goto normalizeRoundAndPack;
+aExpBigger:
+  if (aExp == 0xFF) {
+    if (aSig) return propagateFloat32NaN(a, b);
+    return a;
+  }
+  if (bExp == 0) {
+    --expDiff;
+  } else {
+    bSig |= 0x40000000;
+  }
+  shift32RightJamming(bSig, expDiff, &bSig);
+  aSig |= 0x40000000;
 aBigger:
-    zSig = aSig - bSig;
-    zExp = aExp;
+  zSig = aSig - bSig;
+  zExp = aExp;
 normalizeRoundAndPack:
-    --zExp;
-    return normalizeRoundAndPackFloat32( zSign, zExp, zSig );
-	
+  --zExp;
+  return normalizeRoundAndPackFloat32(zSign, zExp, zSig);
 }
 
 /*----------------------------------------------------------------------------
@@ -483,19 +414,16 @@ normalizeRoundAndPack:
  | Binary Floating-Point Arithmetic.
  *----------------------------------------------------------------------------*/
 
-float32 float32_add( float32 a, float32 b )
-{
-    flag aSign, bSign;
-	
-    aSign = extractFloat32Sign( a );
-    bSign = extractFloat32Sign( b );
-    if ( aSign == bSign ) {
-        return addFloat32Sigs( a, b, aSign );
-    }
-    else {
-        return subFloat32Sigs( a, b, aSign );
-    }
-	
+float32 float32_add(float32 a, float32 b) {
+  flag aSign, bSign;
+
+  aSign = extractFloat32Sign(a);
+  bSign = extractFloat32Sign(b);
+  if (aSign == bSign) {
+    return addFloat32Sigs(a, b, aSign);
+  } else {
+    return subFloat32Sigs(a, b, aSign);
+  }
 }
 
 /*----------------------------------------------------------------------------
@@ -504,162 +432,141 @@ float32 float32_add( float32 a, float32 b )
  | for Binary Floating-Point Arithmetic.
  *----------------------------------------------------------------------------*/
 
-float32 float32_sub( float32 a, float32 b )
-{
-    flag aSign, bSign;
-	
-    aSign = extractFloat32Sign( a );
-    bSign = extractFloat32Sign( b );
-    if ( aSign == bSign ) {
-        return subFloat32Sigs( a, b, aSign );
+float32 float32_sub(float32 a, float32 b) {
+  flag aSign, bSign;
+
+  aSign = extractFloat32Sign(a);
+  bSign = extractFloat32Sign(b);
+  if (aSign == bSign) {
+    return subFloat32Sigs(a, b, aSign);
+  } else {
+    return addFloat32Sigs(a, b, aSign);
+  }
+}
+
+// fully comment  expo() , digits(), and getfraction()
+
+unsigned int expo(unsigned int a,
+                  unsigned int b) {  // computes a ^ b for unsigned int
+  unsigned int result = 1;
+  while (b > 0) {
+    result *= a;
+    b--;
+  }
+  return result;
+}
+
+unsigned int digits(unsigned int in)  // Copyright 2014 Eugene Rockey
+{  // computes the number of decimal digits in a decimal number
+  unsigned int count = 0;
+  if (in == 0) return 0;
+  while (in != 0) {
+    in /= 10;
+    count++;
+  }
+  return count;
+}
+
+unsigned int getfraction(unsigned int shifts, unsigned int fleadzeros,
+                         unsigned int fraction)  // Copyright 2014 Eugene Rockey
+{  // computes the 23-bit mantissa or fraction of the IEEE-754 32-bit unsigned
+   // int
+  unsigned int out = 0;
+  unsigned int temp = 0;
+  unsigned int places = digits(fraction) + fleadzeros;
+  while (shifts != 0 && fraction != 0) {
+    temp = fraction * 2;
+    if (digits(temp) > places) {
+      out = out | (1 << shifts);
+      fraction = temp - expo(10, places);
+    } else {
+      fraction = temp;
     }
-    else {
-        return addFloat32Sigs( a, b, aSign );
+    shifts--;
+  }
+  return out;
+}
+
+unsigned int ASCII_to_float32(char* in)  // Copyright 2014 Eugene Rockey
+{  // converts ASCII decimal numbers to IEEE-754 32-bit unsigned int
+  unsigned int out = 0, index = 0, integer = 0, fraction = 0, biasedexp = 0,
+               shifts = 0, fleadzeros = 0, ibits = 0;
+
+  if (in[index] == '-') {
+    out = 0x80000000;
+    index++;
+  }
+
+  while (in[index] != '.') {
+    integer = (integer + (in[index] - 48)) * 10;
+    index++;
+  }
+  integer /= 10;
+  index++;
+  while (in[index] == '0') {
+    fleadzeros++;
+    index++;
+  }
+
+  while (in[index] != 0) {
+    fraction = (fraction + (in[index] - 48)) * 10;
+    index++;
+  }
+
+  fraction /= 10;
+
+  if (integer == 0 && fraction == 0) {
+    return 0;
+  }
+
+  if (integer == 0 && fraction != 0) {
+    unsigned int temp = 0;
+    unsigned int scount = 0;
+    temp = getfraction(22, fleadzeros, fraction);
+    while (temp < 0x80000000) {
+      temp = temp << 1;
+      scount += 1;
     }
-	
+    temp = temp << 1;
+    temp = temp >> 9;
+    out = out | temp;
+    scount = scount + 1 - 9;
+    biasedexp = 0;
+    biasedexp = (127 - scount) * 0x800000;
+    return out | biasedexp;
+  }
+
+  if (integer != 0 && fraction == 0) {
+    while (integer < 0x400000) {
+      integer *= 2;
+      shifts++;
+    }
+    ibits = 23 - shifts;
+    biasedexp = (ibits + 126) * 0x800000;
+    out = out | biasedexp;
+    integer *= 2;
+    integer = integer & 0x007FFFFF;
+    return out | integer;
+  }
+
+  if (integer != 0 && fraction != 0) {
+    while (integer < 0x400000) {
+      integer *= 2;
+      shifts++;
+    }
+    ibits = 23 - shifts;
+    biasedexp = (ibits + 126) * 0x800000;
+    out = out | biasedexp;
+    integer *= 2;
+    integer = integer & 0x007FFFFF;
+    out = out | integer;
+    return out | getfraction(shifts, fleadzeros, fraction);
+  }
+
+  // Default
+  return 0;
 }
 
-//fully comment  expo() , digits(), and getfraction()
-
-unsigned int expo(unsigned int a, unsigned int b)
-{									//computes a ^ b for unsigned int
-	unsigned int result = 1;
-	while (b>0) 
-	{
-		result *= a;
-		b--;
-	}
-	return result;	
+const char* float32_to_ASCII(float32 r) {
+  return "Engineer and fully comment this function.";
 }
-
-unsigned int digits(unsigned int in) //Copyright 2014 Eugene Rockey
-{									//computes the number of decimal digits in a decimal number
-	unsigned int count = 0;
-	if (in == 0) return 0;
-	while (in != 0) 
-	{
-		in /= 10;
-		count ++;
-	}
-	return count;
-}
-
-unsigned int getfraction(unsigned int shifts, unsigned int fleadzeros, unsigned int fraction) //Copyright 2014 Eugene Rockey
-{									//computes the 23-bit mantissa or fraction of the IEEE-754 32-bit unsigned int
-	unsigned int out = 0;
-	unsigned int temp = 0;
-	unsigned int places = digits(fraction) + fleadzeros;
-	while (shifts != 0 && fraction != 0) 
-	{
-		temp = fraction * 2;
-		if (digits(temp) > places)
-		{
-			out = out | (1 << shifts);
-			fraction = temp - expo(10,places);
-		}
-		else 
-		{
-			fraction = temp;
-		}
-		shifts --;
-	}
-	return out;
-}
-
-unsigned int ASCII_to_float32(char* in) //Copyright 2014 Eugene Rockey
-{									//converts ASCII decimal numbers to IEEE-754 32-bit unsigned int
-	unsigned int out = 0, index = 0, integer = 0, fraction = 0, biasedexp = 0, shifts = 0, fleadzeros = 0, ibits = 0;
-	
-	if (in[index] == '-')
-	{
-		out = 0x80000000;
-		index++;
-	}
-	
-	while (in[index] != '.') 
-	{
-		integer = (integer + (in[index] - 48)) * 10;
-		index ++;
-	}
-	integer /= 10;	
-	index ++;
-	while (in[index] == '0') 
-	{
-		fleadzeros ++;
-		index ++;
-	}
-	
-	while (in[index] != 0) 
-	{
-		fraction = (fraction + (in[index] - 48)) * 10;
-		index ++;
-	}
-	
-	fraction /= 10;	
-	
-	if (integer == 0 && fraction == 0)
-	{
-		return 0;
-	}	
-	
-	if (integer == 0 && fraction != 0)
-	{
-		unsigned int temp = 0;
-		unsigned int scount = 0;
-		temp = getfraction(22, fleadzeros, fraction);
-		while (temp < 0x80000000) 
-		{
-			temp = temp << 1;
-			scount += 1;
-		}
-		temp = temp << 1;
-		temp = temp >> 9;
-		out = out | temp;
-		scount = scount + 1 - 9;
-		biasedexp = 0;
-		biasedexp = (127 - scount) * 0x800000;
-		return out | biasedexp;
-	}	
-	
-	if (integer != 0 && fraction == 0)
-	{
-		while (integer < 0x400000) 
-		{
-			integer *= 2;
-			shifts ++;
-		}
-		ibits = 23 - shifts;
-		biasedexp = (ibits + 126) * 0x800000;
-		out = out | biasedexp;
-		integer *= 2;
-		integer = integer & 0x007FFFFF;
-		return out | integer;		
-	}
-	
-	if (integer != 0 && fraction != 0 ) 
-	{
-		while (integer < 0x400000) 
-		{
-			integer *= 2;
-			shifts ++;
-		}
-	ibits = 23 - shifts;
-	biasedexp = (ibits + 126) * 0x800000;
-	out = out | biasedexp;
-	integer *= 2;
-	integer = integer & 0x007FFFFF;
-	out = out | integer;
-	return out | getfraction(shifts, fleadzeros, fraction);
-	}
-	
-	//Default
-	return 0;
-}
-
-
-const char* float32_to_ASCII(float32 r)
-{
-	return "Engineer and fully comment this function.";
-}
-
-
