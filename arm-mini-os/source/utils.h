@@ -1,6 +1,9 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#define PRINTF_DISABLE_SUPPORT_LONG_LONG
+#include "custom_printf.h"
+
 #define nullptr 0
 
 // terminates the program with a custom message
