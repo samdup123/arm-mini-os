@@ -447,7 +447,6 @@ int _write(const int fd, const uint8_t* const buffer, const size_t count) {
 
 void irq_handler(void) {
   uart_puts("interrupted: in irq_handler()");
-  printf("using printf");
   uint8_t c = uart_readc();
   uart_putc(' ');
   uart_putc(c);
