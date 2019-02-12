@@ -1,5 +1,5 @@
-#ifndef CUSTOME_PRINTF_H_
-#define CUSTOME_PRINTF_H_
+#ifndef CUSTOM_PRINTF_H_
+#define CUSTOM_PRINTF_H_
 
 #include "uart.h"
 
@@ -8,7 +8,7 @@
 
 // This is the crux of the printf implementation for this lab.
 // Synchronously writes a byte to serial.
-void _putchar(char c) { uart_putc((uint8_t)c); }
+void custom_putchar(char c);
 
 #define uart_printf printf_
 int printf_(const char* format, ...);
@@ -24,4 +24,4 @@ int vsnprintf_(char* buffer, size_t count, const char* format, va_list va);
 int fctprintf(void (*out)(char character, void* arg), void* arg,
               const char* format, ...);
 
-#endif  // CUSTOME_PRINTF_H_
+#endif  // CUSTOM_PRINTF_H_

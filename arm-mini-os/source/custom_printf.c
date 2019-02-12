@@ -64,6 +64,8 @@ typedef struct {
   void* arg;
 } out_fct_wrap_type;
 
+void custom_putchar(char c) { uart_putc((uint8_t)c); }
+
 // internal buffer output
 static inline void _out_buffer(char character, void* buffer, size_t idx,
                                size_t maxlen) {
@@ -81,14 +83,14 @@ static inline void _out_null(char character, void* buffer, size_t idx,
   (void)maxlen;
 }
 
-// internal _putchar wrapper
+// internal custom_putchar wrapper
 static inline void _out_char(char character, void* buffer, size_t idx,
                              size_t maxlen) {
   (void)buffer;
   (void)idx;
   (void)maxlen;
   if (character) {
-    _putchar(character);
+    custom_putchar(character);
   }
 }
 
