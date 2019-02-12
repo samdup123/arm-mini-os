@@ -12,9 +12,9 @@ extern int add(int a, int b),  // --> a + b
                   int *remainder);  // --> a / b, remainder=(a % b)
 
 // calculate the result with the given mathematic operator
-int calculate(int a, unsigned char operator, int b, int *const remainder,
+int calculate(int a, unsigned char op, int b, int *const remainder,
               void (*print_fn)(const char *)) {
-  switch (operator) {
+  switch (op) {
     case '+':
       return add(a, b);
     case '-':
@@ -35,7 +35,7 @@ int calculator(void (*print_fn)(const char *)) {
   print_fn("Enter an expression: (a {+|-|*|/} b)");
 
   int a = 0, b = 0, remainder = -1;  // parsed values and divmod remainder
-  unsigned char operator= '\0';      // parse input operator
+  unsigned char op = '\0';           // parse input operator
 
   // continuously evaluate expressions, until a signal
   while (1) {
