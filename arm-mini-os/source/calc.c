@@ -1,14 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 // terminates the program with a custom message
-void die(const char *msg) {
-  printf("fatal: %s\n", msg ? msg : "unspecified error");
-  exit(EXIT_FAILURE);
+void die(void (*print_fn)(const char *), const char *msg) {
+  const char *const error_message = msg ? msg : "unspecified error";
+  while (1) {
+    print_fn("\nfatal: ");
+    print_fn(error_message);
+  }
 }
 // conditionally terminates the program with a custom message
-void dieif(int should_die, const char *msg) {
-  if (should_die) die(msg);
+void dieif(int should_die, void (*print_fn)(const char *), const char *msg) {
+  if (should_die) die(print_fn, msg);
 }
 
 // ARM assembly-implemented functions
@@ -19,7 +19,8 @@ extern int add(int a, int b),  // --> a + b
                   int *remainder);  // --> a / b, remainder=(a % b)
 
 // calculate the result with the given mathematic operator
-int calculate(int a, unsigned char operator, int b, int *const remainder) {
+int calculate(int a, unsigned char operator, int b, int *const remainder,
+              void (*print_fn)(const char *)) {
   switch (operator) {
     case '+':
       return add(a, b);
@@ -30,13 +31,13 @@ int calculate(int a, unsigned char operator, int b, int *const remainder) {
     case '/':
       return div_remainder(a, b, remainder);
     default:
-      die("operator not recognized");
+      die(print_fn, "operator not recognized");
   }
 }
 
-int main(void) {
+int calculator(void (*print_fn)(const char *)) {
   // print menu/instructions
-  printf("Enter an expression: (a {+|-|*|/} b)");
+  print_fn("Enter an expression: (a {+|-|*|/} b)");
 
   int a = 0, b = 0, remainder = -1;  // parsed values and divmod remainder
   unsigned char operator= '\0';      // parse input operator
@@ -47,12 +48,12 @@ int main(void) {
     printf("\n> ");
 
     // parse the expression
-    dieif(scanf("%d %c %d", &a, &operator, &b) < 0, "bad expression");
+    // dieif(scanf("%d %c %d", &a, &operator, &b) < 0, "bad expression");
 
     // calculate & print result (inc. remainder for '/')
-    printf("%d", calculate(a, operator, b, &remainder));
+    // printf("%d", calculate(a, operator, b, &remainder));
     if (remainder >= 0) {  // if remainder was set to a sane value
-      printf(" [remainder = %d]", remainder);  // express the remainder
+      // printf(" [remainder = %d]", remainder);  // express the remainder
       remainder = -1;                          // set back to a not-sane value
     }
   }
