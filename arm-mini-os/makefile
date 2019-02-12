@@ -32,8 +32,6 @@ OBJECTS := $(OBJECTS_AS) $(OBJECTS_GCC)
 
 all: $(OUTPUT_IMAGE) $(LISTING_FILE) $(OBJECTS_GCC)
 
-rebuild: all
-
 # Rule to make the object files from C source.
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 	$(CC) -I $(SOURCE_DIR) $< -c $(COPTS) -o $@
@@ -62,4 +60,7 @@ clean:
 	-rm -f $(LISTING_FILE)
 	-rm -f $(MAP_FILE)
 
-c : clean
+c: clean
+
+rebuild: c all
+r: rebuild
