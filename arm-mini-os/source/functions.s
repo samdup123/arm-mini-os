@@ -1,9 +1,3 @@
-/**
- * Instructor:  Eugene Rockey
- * Author:      Nolan Holden
- * Assignment:  Lab 1
- */
-
                 .text                    @ begin text section
 
                 .global add              @ add subroutine 'add' globally
