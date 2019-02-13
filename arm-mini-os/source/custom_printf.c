@@ -1,7 +1,5 @@
 #include "custom_printf.h"
 
-#include "utils.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -222,9 +220,10 @@ static size_t _ntoa_long(out_fct_type out, char* buffer, size_t idx,
   // write if precision != 0 and value is != 0
   if (!(flags & FLAGS_PRECISION) || value) {
     do {
-      CHECK(base != 10, "%s",
-            "only base 10 number serialisation is supported, a non-10 base "
-            "was provided to _ntoa_long");
+      if (base != 10) {
+        die("only base 10 number serialisation is supported, a non-10 base was "
+            "provided to _ntoa_long");
+      }
       const char digit = (char)(value % 10);  // base);
       buf[len++] = digit < 10
                        ? '0' + digit
@@ -550,8 +549,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         if ((*format == 'i') || (*format == 'd')) {
           // signed
           if (flags & FLAGS_LONG_LONG) {
-            LOG(FATAL, "%s",
-                "type `long long` not supported for custom printf (signed)");
+            die("type `long long` not supported for custom printf (signed)");
           } else if (flags & FLAGS_LONG) {
             const long value = va_arg(va, long);
             idx = _ntoa_long(out, buffer, idx, maxlen,
@@ -570,8 +568,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         } else {
           // unsigned
           if (flags & FLAGS_LONG_LONG) {
-            LOG(FATAL, "%s",
-                "type `long long` not supported for custom printf (unsigned)");
+            die("type `long long` not supported for custom printf (unsigned)");
           } else if (flags & FLAGS_LONG) {
             idx =
                 _ntoa_long(out, buffer, idx, maxlen, va_arg(va, unsigned long),

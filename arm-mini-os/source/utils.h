@@ -39,15 +39,7 @@ extern log_level_t min_logging_level;
       }                                                                      \
       if (is_fatal) {                                                        \
         /* print fatal message forever */                                    \
-        while (1) {                                                          \
-          LOGGING_PRINTF_FUNC(                                               \
-              "\n\rfatal: stopping system and looping forever");             \
-                                                                             \
-          /* delaying slightly */                                            \
-          for (int count = 0xFFFFF; --count > 0;)                            \
-            for (int count2 = 4; --count2 > 0;)                              \
-              ;                                                              \
-        }                                                                    \
+        die("due to call to LOG(FATAL, ...)");                               \
       }                                                                      \
     }                                                                        \
   } while (0)
