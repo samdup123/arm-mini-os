@@ -477,7 +477,7 @@ void kernel_main() {
   uart_init();
   enable_irq_57();
   enable_arm_irq();
-  uart_puts("TinyOS");
+  uart_puts("TinyOS\n");
 
   while (1) 
   {
