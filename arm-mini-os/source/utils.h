@@ -44,7 +44,7 @@ extern log_level_t min_logging_level;
       if (is_fatal) {                                                        \
         /* print fatal message forever */                                    \
         while (1) {                                                          \
-          uart_printf("\n\r" ANSI_COLOR_RED "fatal" ANSI_COLOR_RESET         \
+          uart_printf("\n\r"##ANSI_COLOR_RED "fatal"##ANSI_COLOR_RESET       \
                       ": stopping system and looping forever");              \
                                                                              \
           /* delaying slightly */                                            \
