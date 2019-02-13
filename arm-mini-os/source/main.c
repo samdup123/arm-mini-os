@@ -433,12 +433,6 @@ void kernel_main() {
 }
 
 void irq_handler(void) {
-  LOG(ERROR, "%s", "caution");
-  LOG(FATAL, "%d", 100);
-  uart_puts("\n\rbye");
-  while (1)
-    ;
-  CHECK(0 == 0, "%s", "0 same as 0");
-  CHECK(0 == 1, "%s", "big issue");
   uint8_t c = uart_readc();
+  uart_printf("\n\r[%x]", c);
 }
