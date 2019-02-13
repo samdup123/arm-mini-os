@@ -12,8 +12,8 @@ int char_to_int(char c) { return c - '0'; }
 // - `number_end` is assigned the first char in the input buffer after the
 // number.
 int atoi_to_end(const char* const number, const char** number_end) {
-  CHECK_FMT(number != nullptr, "%s", "atoi called with null string");
-  CHECK_FMT(*number != '\0', "%s", "atoi called with empty string");
+  CHECK(number != nullptr, "%s", "atoi called with null string");
+  CHECK(*number != '\0', "%s", "atoi called with empty string");
 
   const char* pos = number;
   while (is_space(*pos)) ++pos;  // permit and skip over leading space
@@ -21,8 +21,8 @@ int atoi_to_end(const char* const number, const char** number_end) {
   const int number_is_negative = (*pos == '-');
   const char* const most_significant_digit =
       (number_is_negative || (*pos == '+')) ? (pos + 1) : pos;
-  CHECK_FMT(is_digit(*most_significant_digit),
-            "atoi_to_end() input string [%s] is malformed", number);
+  CHECK(is_digit(*most_significant_digit),
+        "atoi_to_end() input string [%s] is malformed", number);
 
   // Find the least significant digit (farthest right).
   const char* least_significant_digit = most_significant_digit;

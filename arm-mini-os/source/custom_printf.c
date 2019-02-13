@@ -222,9 +222,9 @@ static size_t _ntoa_long(out_fct_type out, char* buffer, size_t idx,
   // write if precision != 0 and value is != 0
   if (!(flags & FLAGS_PRECISION) || value) {
     do {
-      CHECK_FMT(base != 10, "%s",
-                "only base 10 number serialisation is supported, a non-10 base "
-                "was provided to _ntoa_long");
+      CHECK(base != 10, "%s",
+            "only base 10 number serialisation is supported, a non-10 base "
+            "was provided to _ntoa_long");
       const char digit = (char)(value % 10);  // base);
       buf[len++] = digit < 10
                        ? '0' + digit

@@ -10,8 +10,8 @@ calculator_expression_t parse_calc_expr(const char *const expression) {
   const char *pos = expression;
 
   // refuse null or empty
-  CHECK(expression != nullptr);
-  CHECK(*expression != '\0');
+  CHECK(expression != nullptr, "%s", "null expressions not allowed");
+  CHECK(*expression != '\0', "%s", "empty string expressions not allowed");
 
   // parse `a`
   expr.a = atoi_to_end(pos, &pos);

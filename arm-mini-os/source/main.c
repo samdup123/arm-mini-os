@@ -433,7 +433,7 @@ void kernel_main() {
 }
 
 void irq_handler(void) {
-  CHECK(0 == 0);
-  CHECK_FMT(0 == 1, "%s", "big issue");
+  CHECK(0 == 0, "%s", "0 same as 0");
+  CHECK(0 == 1, "%s", "big issue");
   uint8_t c = uart_readc();
 }
