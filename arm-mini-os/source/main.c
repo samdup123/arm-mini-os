@@ -434,5 +434,5 @@ void kernel_main() {
 
 void irq_handler(void) {
   uint8_t c = uart_readc();
-  uart_printf("\n\r[%x]", c);
+  uart_printf("\n\r[%d]", c);
 }
