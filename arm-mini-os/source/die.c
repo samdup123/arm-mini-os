@@ -2,12 +2,12 @@
 
 #include "uart.h"
 
-void die(const char* message) {
+void die(void (*print_fn)(const char*), const char* message) {
   const char* const msg = message ? message : "unspecified error";
   while (1) {
-    uart_puts("\n\rfatal: ");
-    uart_puts("stopping system and looping forever: ");
-    uart_puts(msg);
+    print_fn("\n\rfatal: ");
+    print_fn("stopping system and looping forever: ");
+    print_fn(msg);
 
     /* delaying slightly */
     for (int count = 0xFFFFF; --count > 0;)

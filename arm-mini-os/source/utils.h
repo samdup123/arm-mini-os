@@ -1,6 +1,8 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include "die.h"
+
 #ifdef LOGGING_USE_STDOUT
 #include <stdio.h>
 #define LOGGING_PRINTF_FUNC printf
@@ -39,7 +41,8 @@ extern log_level_t min_logging_level;
       }                                                                       \
       if (is_fatal) {                                                         \
         /* print fatal message forever */                                     \
-        die("due to call to LOG(FATAL, ...)");                                \
+        void print_fn(const char* msg) { LOGGING_PRINTF_FUNC("%s", msg); }    \
+        die(print_fn, "due to call to LOG(FATAL, ...)");                      \
       }                                                                       \
     }                                                                         \
   } while (0)
