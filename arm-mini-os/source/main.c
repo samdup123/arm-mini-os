@@ -455,7 +455,6 @@ int logon(void) {
 void String(void)
 {
 	sendingLongString = 1;
-	uart_enable_transmit_interrupt();
 	write_8_bytes_of_long_string_if_available();
 }
 
@@ -537,11 +536,14 @@ char buf_readc(void)
 }
 
 void irq_handler(void) {
-  	if (uart_check_buffer('r') != UART_BUFFER_EMPTY){
-		while (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
-			rxA[inRx] = uart_readc();
-			inRx++;
-			if (inRx >= BUFFER_LENGTH) {inRx = 0;}
-		}
-	}
+  if (uart_check_buffer('r') != UART_BUFFER_EMPTY){
+    while (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
+      rxA[inRx] = uart_readc();
+      inRx++;
+      if (inRx >= BUFFER_LENGTH) {inRx = 0;}
+    }
+  }
+  else if ((uart_check_buffer('t') == UART_BUFFER_EMPTY) && sendingLongString) {
+    write_8_bytes_of_long_string_if_available();
+  }
 }
