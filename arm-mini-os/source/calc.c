@@ -41,7 +41,11 @@ int calculate(const calculator_expression_t *expr, int *const remainder) {
   }
 }
 
-int calculator(void (*print_fn)(const char *, ...)) {
+int calculator(int (*print_fn)(const char *, ...), char (*scan_char)()) {
+  int bufferSize = 16;
+  char buf[bufferSize];
+  char c;
+  
   // print menu/instructions
   print_fn("\n\rEnter an expression: (a {+|-|*|/} b)");
 
@@ -57,8 +61,24 @@ int calculator(void (*print_fn)(const char *, ...)) {
   while (1) {
     print_fn("\n\r> ");  // user prompt
 
-    // parse the expression
-    // scanf("%d %c %d", &a, &operator, &b)
+    // clear buffer
+    for (int i = 0; i < bufferSize; i++) {
+      buf[i] = '\0';
+    }
+    
+    // pull characters
+    c = scan_char();
+    for (int i = 0; i < bufferSize; i++) {
+      if (c == '\r' || c == '\t') {
+		  break;
+      }
+      print_fn("%c", c);
+      buf[i] = c;
+      c = scan_char();
+    }
+    print_fn("\n\r");
+    
+    expr = parse_calc_expr(buf);
 
     // calculate & print result (inc. remainder for '/')
     print_fn("%d", calculate(&expr, &division_remainder));
