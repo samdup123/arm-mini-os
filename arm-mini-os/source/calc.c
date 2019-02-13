@@ -58,7 +58,7 @@ int calculator(void (*print_fn)(const char *, ...)) {
     print_fn("\n\r> ");  // user prompt
 
     // parse the expression
-    // dieif(scanf("%d %c %d", &a, &operator, &b) < 0, "bad expression");
+    // scanf("%d %c %d", &a, &operator, &b)
 
     // calculate & print result (inc. remainder for '/')
     print_fn("%d", calculate(&expr, &division_remainder));

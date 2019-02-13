@@ -222,9 +222,9 @@ static size_t _ntoa_long(out_fct_type out, char* buffer, size_t idx,
   // write if precision != 0 and value is != 0
   if (!(flags & FLAGS_PRECISION) || value) {
     do {
-      dieif(base != 10, uart_puts,
-            "only base 10 number serialisation is supported, a non-10 base was "
-            "provided to _ntoa_long");
+      CHECK_FMT(base != 10, "%s",
+                "only base 10 number serialisation is supported, a non-10 base "
+                "was provided to _ntoa_long");
       const char digit = (char)(value % 10);  // base);
       buf[len++] = digit < 10
                        ? '0' + digit
@@ -550,7 +550,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         if ((*format == 'i') || (*format == 'd')) {
           // signed
           if (flags & FLAGS_LONG_LONG) {
-            die(uart_puts,
+            LOG(FATAL, "%s",
                 "type `long long` not supported for custom printf (signed)");
           } else if (flags & FLAGS_LONG) {
             const long value = va_arg(va, long);
@@ -570,7 +570,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen,
         } else {
           // unsigned
           if (flags & FLAGS_LONG_LONG) {
-            die(uart_puts,
+            LOG(FATAL, "%s",
                 "type `long long` not supported for custom printf (unsigned)");
           } else if (flags & FLAGS_LONG) {
             idx =
