@@ -3,7 +3,7 @@
 set -e
 set -x
 
-gcc source/calc_unittest.c source/calc.c source/utils.c
+gcc test/calc_unittest.c -I./source source/calc.c source/utils.c
 ./a.out
 rm a.out
 
