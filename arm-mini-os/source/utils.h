@@ -51,4 +51,18 @@ extern log_level_t min_logging_level;
     }                                                                        \
   } while (0)
 
+#define CHECK_FMT(expr, format, ...)                                    \
+  do {                                                                  \
+    const int ok = (expr);                                              \
+    if (!ok) {                                                          \
+      LOG(FATAL, "CHECK_EQ failed for expression `" #expr "`: " format, \
+          __VA_ARGS__);                                                 \
+    }                                                                   \
+  } while (0)
+
+#define CHECK(expr)                         \
+  do {                                      \
+    CHECK_FMT(expr, "%s", "(unspecified)"); \
+  } while (0)
+
 #endif  // UTILS_H_
