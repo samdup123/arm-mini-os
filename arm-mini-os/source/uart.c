@@ -100,6 +100,43 @@ void uart_init() {
   mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
+void uart_enable_transmit_interrupt(void)
+{
+	// Engineer the Interrupt for UART0 Receive and transmit
+    mmio_write(UART0_IMSC, (1 << 4) | (1 << 5));
+ }
+ 
+void uart_disable_transmit_interrupt(void)
+{
+	// Engineer the Interrupt for UART0 Receive
+    mmio_write(UART0_IMSC, (1 << 4));
+}
+
+char uart_check_buffer(char a)
+{
+	if (a == 't') {
+		if (mmio_read(UART0_FR) & (1<<7)) {
+			return UART_BUFFER_EMPTY;
+			
+		} else if (mmio_read(UART0_FR) & (1<<5)) {
+			return UART_BUFFER_FULL;
+			
+		} else {
+			return UART_BUFFER_PARTIALLY_FULL;
+		}
+	} else if (a == 'r') {
+		if (mmio_read(UART0_FR) & (1<<4)) {
+			return UART_BUFFER_EMPTY;
+			
+		} else if (mmio_read(UART0_FR) & (1<<6)) {
+			return UART_BUFFER_FULL;
+			
+		} else {
+			return UART_BUFFER_PARTIALLY_FULL;
+		}
+	}
+}
+
 /*
  * Transmit a byte via UART0.
  * uint8_t Byte: byte to send.
@@ -107,12 +144,10 @@ void uart_init() {
 void uart_putc(uint8_t byte) {
   // test for UART to become ready to transmit
   while (1) {
-    //  if (!(mmio_read(UART0_FR) & (1 << 5)))
-    //  {
-    if (!(mmio_read(UART0_FR) & (1 << 3))) {
+    if (!(mmio_read(UART0_FR) & (1 << 5))){
+    //if (!(mmio_read(UART0_FR) & (1 << 3))) {
       break;
-    }
-    //	}
+	}
   }
   mmio_write(UART0_DR, byte);
 }
