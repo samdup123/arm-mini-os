@@ -13,6 +13,7 @@
 #include "mmio.h"
 #include "softfloat.h"
 #include "uart.h"
+#include "calc.h"
 
 #define SECS 0x00
 #define MINS 0x01
@@ -460,7 +461,7 @@ void String(void)
 
 void calc(void)
 {
-	uart_putc(buf_readc());
+	calculator(uart_printf, buf_readc);
 }
 
 void kernel_main() {

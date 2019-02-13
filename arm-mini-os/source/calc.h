@@ -30,6 +30,6 @@ extern int add(int a, int b),  // --> a + b
 // calculate the result with the given mathematic operator
 int calculate(const calculator_expression_t *expr, int *const remainder);
 
-int calculator(void (*print_fn)(const char *, ...));
+int calculator(int (*print_fn)(const char *, ...), char (*scan_char)());
 
 #endif  // CALC_H_
