@@ -26,7 +26,7 @@ COPTS = \
 
 OBJECTS_AS := $(patsubst $(SOURCE_DIR)/%.s,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_DIR)/*.s))
 OBJECTS_GCC := $(patsubst $(SOURCE_DIR)/%.c,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_DIR)/*.c))
-OBJECTS_GCC := $(filter-out $(SOURCE_DIR)/*unittest*.c*, $(OBJECTS_GCC))
+OBJECTS_GCC := $(filter-out $(wildcard $(SOURCE_DIR)/*unittest*.c*), $(OBJECTS_GCC))
 OBJECTS := $(OBJECTS_AS) $(OBJECTS_GCC)
 
 
