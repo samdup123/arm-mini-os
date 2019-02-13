@@ -3,8 +3,6 @@
 
 #include "custom_printf.h"
 
-#include <time.h>
-
 #define nullptr 0
 
 #define DEBUG 1
@@ -14,7 +12,6 @@
     if (DEBUG) {                                                          \
       uart_printf("[" #level "] %s:%d:%s(): " format, __FILE__, __LINE__, \
                   __func__, __VA_ARGS__);                                 \
-      time(0);                                                            \
     }                                                                     \
   } while (0)
 
