@@ -1,5 +1,7 @@
 #include "utils.h"
 
+log_level_t min_logging_level = 0;
+
 void die(void (*print_fn)(const char *), const char *msg) {
   const char *const error_message = msg ? msg : "unspecified error";
   while (1) {
