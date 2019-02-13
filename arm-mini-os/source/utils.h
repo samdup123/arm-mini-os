@@ -22,10 +22,6 @@ typedef enum {
 
 extern log_level_t min_logging_level;
 
-#define ANSI_COLOR_GREEN "\x1b[32m"
-#define ANSI_COLOR_RED "\x1b[31m"
-#define ANSI_COLOR_RESET "\x1b[0m"
-
 // Usage:
 //   LOG(ERROR, "expected 100, got %d", 101);
 //
@@ -44,8 +40,7 @@ extern log_level_t min_logging_level;
       if (is_fatal) {                                                        \
         /* print fatal message forever */                                    \
         while (1) {                                                          \
-          uart_printf("\n\r"##ANSI_COLOR_RED "fatal"##ANSI_COLOR_RESET       \
-                      ": stopping system and looping forever");              \
+          uart_printf("\n\rfatal: stopping system and looping forever");     \
                                                                              \
           /* delaying slightly */                                            \
           for (int count = 0xFFFFF; --count > 0;)                            \
@@ -55,10 +50,6 @@ extern log_level_t min_logging_level;
       }                                                                      \
     }                                                                        \
   } while (0)
-
-#undef ANSI_COLOR_GREEN
-#undef ANSI_COLOR_RED
-#undef ANSI_COLOR_RESET
 
 #define CHECK_FMT(expr, format, ...)                                    \
   do {                                                                  \
