@@ -433,6 +433,6 @@ void kernel_main() {
 }
 
 void irq_handler(void) {
-  LOG(ERROR, "%s ruined the program %d times", "nolan", 100);
+  LOG(FATAL, "%s ruined the program %d times", "nolan", 100);
   uint8_t c = uart_readc();
 }

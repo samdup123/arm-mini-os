@@ -40,11 +40,12 @@ extern log_level_t min_logging_level;
       if (is_fatal) {                                                         \
         /* print fatal message forever */                                     \
         while (1) {                                                           \
+          uart_printf("\rfatal: stopping forever");                           \
+                                                                              \
           /* delaying slightly */                                             \
-          uint16_t count = 0;                                                 \
+          uint16_t count = 0xFFFFF;                                           \
           while (--count > 0)                                                 \
             ;                                                                 \
-          uart_printf("\rfatal: stopping forever");                           \
         }                                                                     \
       }                                                                       \
     }                                                                         \
