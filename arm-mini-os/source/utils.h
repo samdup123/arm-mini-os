@@ -57,7 +57,7 @@ extern log_level_t min_logging_level;
     const int ok = (expr);                                           \
     if (!ok) {                                                       \
       LOG(FATAL, "CHECK failed for expression `" #expr "`: " format, \
-          ##__VA_ARGS__);                                            \
+          __VA_ARGS__);                                              \
     }                                                                \
   } while (0)
 
