@@ -72,7 +72,9 @@ int calculator(int (*print_fn)(const char *, ...), char (*scan_char)()) {
       if (c == '\r' || c == '\t') {
 		  break;
       }
+      print_fn("%c", c);
       buf[i] = c;
+      c = scan_char();
     }
     
     expr = parse_calc_expr(buf);

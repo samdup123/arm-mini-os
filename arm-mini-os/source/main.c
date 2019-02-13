@@ -487,15 +487,19 @@ void kernel_main() {
       case 's':
         String();
         break;
+        
+      case 'c':
+        calc();
+        break;
+        				
+      case 'x':
+        uart_putc('\n');
+        uart_putc('\n');
+        break;
 				
-     case 'x':
-       uart_putc('\n');
-       uart_putc('\n');
-       break;
-				
-     default:
-       uart_putc('0');
-       break;
+      default:
+        uart_putc('0');
+        break;
     }
   }
 }
