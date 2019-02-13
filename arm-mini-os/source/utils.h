@@ -6,8 +6,12 @@
 #ifdef LOGGING_USE_STDOUT
 #include <stdio.h>
 #define LOGGING_PRINTF_FUNC printf
+void die_print_fn(const char* msg) { printf("%s", msg); }
 #else
+#define LOGGING_USE_STDOUT 0
 #include "custom_printf.h"
+#include "uart.h"
+void (*die_print_fn)(const char*) = uart_puts;
 #define LOGGING_PRINTF_FUNC uart_printf
 #endif
 
@@ -41,8 +45,7 @@ extern log_level_t min_logging_level;
       }                                                                       \
       if (is_fatal) {                                                         \
         /* print fatal message forever */                                     \
-        void print_fn(const char* msg) { LOGGING_PRINTF_FUNC("%s", msg); }    \
-        die(print_fn, "due to call to LOG(FATAL, ...)");                      \
+        die(die_print_fn, "due to call to LOG(FATAL, ...)");                  \
       }                                                                       \
     }                                                                         \
   } while (0)
