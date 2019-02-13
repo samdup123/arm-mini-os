@@ -1,8 +1,6 @@
 #ifndef CUSTOM_PRINTF_H_
 #define CUSTOM_PRINTF_H_
 
-#include "uart.h"
-
 #include <stdarg.h>
 #include <stddef.h>
 

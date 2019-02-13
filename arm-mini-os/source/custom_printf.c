@@ -1,5 +1,8 @@
 #include "custom_printf.h"
 
+#include "die.h"
+#include "uart.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 

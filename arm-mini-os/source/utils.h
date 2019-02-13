@@ -27,21 +27,21 @@ extern log_level_t min_logging_level;
 //
 // Above would output to terminal:
 //  --> [ERROR] your_file.c:34:your_function(): expected 100, got 101
-#define LOG(level, format, ...)                                              \
-  do {                                                                       \
-    if (LOGGING_ENABLED) {                                                   \
-      const log_level_t log_level = LOG_LEVEL_##level;                       \
-      const int is_fatal = (log_level == LOG_LEVEL_FATAL);                   \
-      const int should_print = is_fatal || (log_level >= min_logging_level); \
-      if (should_print) {                                                    \
-        LOGGING_PRINTF_FUNC("\n[" #level "] %s:%d:%s(): " format, __FILE__,  \
-                            __LINE__, __func__, __VA_ARGS__);                \
-      }                                                                      \
-      if (is_fatal) {                                                        \
-        /* print fatal message forever */                                    \
-        die("due to call to LOG(FATAL, ...)");                               \
-      }                                                                      \
-    }                                                                        \
+#define LOG(level, format, ...)                                               \
+  do {                                                                        \
+    if (LOGGING_ENABLED) {                                                    \
+      const log_level_t log_level = LOG_LEVEL_##level;                        \
+      const int is_fatal = (log_level == LOG_LEVEL_FATAL);                    \
+      const int should_print = is_fatal || (log_level >= min_logging_level);  \
+      if (should_print) {                                                     \
+        LOGGING_PRINTF_FUNC("\n\r[" #level "] %s:%d:%s(): " format, __FILE__, \
+                            __LINE__, __func__, __VA_ARGS__);                 \
+      }                                                                       \
+      if (is_fatal) {                                                         \
+        /* print fatal message forever */                                     \
+        die("due to call to LOG(FATAL, ...)");                                \
+      }                                                                       \
+    }                                                                         \
   } while (0)
 
 #define CHECK(expr, format, ...)                                     \
