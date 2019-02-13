@@ -482,7 +482,7 @@ void kernel_main() {
   while (1) 
   {
     c = buf_readc();
-		
+	uart_putc(c);	
     switch(c) {
       case 's':
         String();
