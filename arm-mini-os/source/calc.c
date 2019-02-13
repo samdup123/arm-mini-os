@@ -76,6 +76,7 @@ int calculator(int (*print_fn)(const char *, ...), char (*scan_char)()) {
       buf[i] = c;
       c = scan_char();
     }
+    print_fn("\n");
     
     expr = parse_calc_expr(buf);
 
