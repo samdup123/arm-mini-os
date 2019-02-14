@@ -34,8 +34,7 @@ int calculate(const calculator_expression_t *expr, int *const remainder) {
     case '*':
       return mul(expr->a, expr->b);
     case '/':
-      // TODO: support division
-      LOG(FATAL, "%s", "division not implemented");
+      return div_remainder(expr->a, expr->b, remainder);
     default:
       LOG(FATAL, "%s", "operator not recognized");
   }

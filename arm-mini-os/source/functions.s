@@ -15,6 +15,39 @@ mul:                                     @ define 'mul'
                 mul r0, r1, r0           @ perform the actual multiplication
                 bx  lr                   @ branch out of subroutine
 
+		.global div_remainder
+div_remainder:				 @ move registers around to free up the return register
+		mov r3, r2
+		mov r2, r1
+		mov r1, r0
+		mov r0, #0
+		mov r4, #0
+    div_n1:				 @ negate the dividend if negative and flag
+		cmp r1, #0
+		bgt div_n2
+		rsb r1, r1, #0
+		add r4, r4, #1
+    div_n2:				 @ negate the divisor if negative and flag
+		cmp r2, #0
+		bgt div_rec
+		rsb r2, r2, #0
+		sub r4, r4, #1
+
+  div_rec:				 
+		cmp r1, r2		 @ compares the dividend and divisor
+		blt div_rem		 @ branches if the division is complete
+		sub r1, r1, r2		 @ subtracts the divisor from the divedend
+		add r0, r0, #1		 @ adds 1 to the return register
+		b   div_rec		 @ branches to recursion label
+  div_rem:	
+		cmp r4, #0		 @ check the negative flag
+		rsbne r0, r0, #0	 @ negate the result if flag set
+		str r1, [r3]		 @ stores the remainder in the specified memory addr
+		bx  lr			 @ branch out of subroutine
+
+
+
+
 @ TODO: implement division
 @                 .global	__aeabi_idiv     @ add div subroutine globally
 @                 .global	__aeabi_idivmod  @ add divmod subroutine globally
