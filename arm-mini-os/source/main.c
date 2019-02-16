@@ -51,27 +51,14 @@ uint32_t N[200] = {
     28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 12, 11,
     10, 9,  8,  7,  6,  5,  4,  3,  2,  1};
     
-#define BUFFER_LENGTH (256)
+#define BUFFER_LENGTH (512)
 
 char *longString = "The golden-headed cisticola is a small species, "
  "growing to 9–11.5 centimetres (3.5–4.5 in) long and weighing 6–10 "
  "grams (0.21–0.35 oz), with males slightly heavier than females. "
  "Although its appearance is similar to the black-backed cisticola "
  "(Cisticola eximius), the golden-headed cisticola has a shorter tail "
- "during the breeding season. The zitting cisticola (Cisticola juncidis) "
- "is also similar, but the \"rich golden\" head of the golden-headed cisticola "
- "is not present in the zitting cisticola. "
- "The male has several characteristics only present during the breeding season, "
- "including a golden body colour, a golden-orange head, and a dull chin. "
- "It also has a shorter tail; this may be a result of sexual selection as a shorter "
- "tail has been shown to improve male reproductive success. Females and males "
- "outside of the breeding season are similar in appearance, characterized by a "
- "cream-coloured underside and a brown upperside. They have streaks of black or "
- "dark brown on the upper part of their body, black wings, and a golden head. Aside "
- "from being lighter in color, juveniles are similar in appearance to adults. The "
- "head of the species is crested when vocalizing.";
-volatile int longStringTx = 0;
-volatile int sendingLongString = 0;
+ "during the breeding season.";
 				   
 volatile char txA[BUFFER_LENGTH];
 volatile char rxA[BUFFER_LENGTH];
@@ -105,7 +92,9 @@ extern int outvar;
 char buf_readc(void);
 void String(void);
 void calc(void);
-void write_8_bytes_of_long_string_if_available(void);
+void buf_puts(const char *s);
+void buf_putc(char c);
+void software_handle_irq(void);
 
 // Pointers to some of the BCM2835 peripheral register bases
 volatile uint32_t* bcm2835_gpio = (uint32_t*)BCM2835_GPIO_BASE;
@@ -130,7 +119,7 @@ void disable_irq_57(void) { mmio_write(0x2000B220, 0x02000000); }
 
 uint8_t ValidateGPUData(int data) {
   if (data && 0b1111 != 0) {
-    uart_puts(GPUDATAERROR);
+    buf_puts(GPUDATAERROR);
     return 0;
   }
   return 1;
@@ -144,14 +133,14 @@ void GPUInit(void) {
 }
 
 void banner(void) {
-  uart_puts(MS1);
-  uart_puts(MS2);
+  buf_puts(MS1);
+  buf_puts(MS2);
 }
 
 uint8_t BCDtoUint8(uint8_t BCD) { return (BCD & 0x0F) + ((BCD >> 4) * 10); }
 
 void DATE(void) {
-  uart_puts("\r\nEnter DATE (S)et or (D)isplay\r\n");
+  buf_puts("\r\nEnter DATE (S)et or (D)isplay\r\n");
   uint8_t c = '\0';
   while (c == '\0') {
     c = uart_readc();
@@ -169,32 +158,32 @@ void DATE(void) {
       bcm2835_i2c_read(DOM, *buffer);
       char ones = *buffer[0] & 0x0F;
       char tens = (*buffer[0] >> 4);
-      uart_putc(tens + 48);
-      uart_putc(ones + 48);
+      buf_putc(tens + 48);
+      buf_putc(ones + 48);
       bcm2835_i2c_read(MONTH, *buffer);
       ones = *buffer[0] & 0x0F;
       tens = (*buffer[0] >> 4);
-      uart_putc('/');
-      uart_putc(tens + 48);
-      uart_putc(ones + 48);
+      buf_putc('/');
+      buf_putc(tens + 48);
+      buf_putc(ones + 48);
       bcm2835_i2c_read(YEAR, *buffer);
       ones = *buffer[0] & 0x0F;
       tens = (*buffer[0] >> 4);
-      uart_putc('/');
-      uart_putc(tens + 48);
-      uart_putc(ones + 48);
+      buf_putc('/');
+      buf_putc(tens + 48);
+      buf_putc(ones + 48);
       bcm2835_i2c_end();
       break;
     }
     default:
-      uart_puts(MS4);
+      buf_puts(MS4);
       DATE();
       break;
   }
 }
 
 void TIME(void) {
-  uart_puts("\r\nType TIME (S)et or (D)isplay\r\n");
+  buf_puts("\r\nType TIME (S)et or (D)isplay\r\n");
   uint8_t c = '\0';
   while (c == '\0') {
     c = buf_readc();
@@ -204,47 +193,47 @@ void TIME(void) {
       bcm2835_i2c_begin();
       bcm2835_i2c_setClockDivider(BCM2835_I2C_CLOCK_DIVIDER_2500);
       bcm2835_i2c_setSlaveAddress(0x68);
-      uart_puts("\r\nSet 24 Hour Time");
-      uart_puts("\r\nType Hours (two digits 00-23): ");
+      buf_puts("\r\nSet 24 Hour Time");
+      buf_puts("\r\nType Hours (two digits 00-23): ");
       tens = ((buf_readc() - 48) << 4) | 0x0F;
-      uart_putc((tens >> 4) + 48);
+      buf_putc((tens >> 4) + 48);
       ones = (buf_readc() - 48) | 0xF0;
-      uart_putc((ones & 0x0F) + 48);
+      buf_putc((ones & 0x0F) + 48);
       if (BCDtoUint8(tens & ones) < 0 || BCDtoUint8(tens & ones) > 23) {
         *buffer[0] = 0x00;
-        uart_puts("\r\nInvalid Hours Value!");
+        buf_puts("\r\nInvalid Hours Value!");
         break;
       } else {
         *buffer[0] = tens & ones;
       }
       bcm2835_i2c_write(HRS, *buffer);
-      uart_puts("\r\nType Minutes (two digits 00-59): ");
+      buf_puts("\r\nType Minutes (two digits 00-59): ");
       tens = ((buf_readc() - 48) << 4) | 0x0F;
-      uart_putc((tens >> 4) + 48);
+      buf_putc((tens >> 4) + 48);
       ones = (buf_readc() - 48) | 0xF0;
-      uart_putc((ones & 0x0F) + 48);
+      buf_putc((ones & 0x0F) + 48);
       if (BCDtoUint8(tens & ones) < 0 || BCDtoUint8(tens & ones) > 59) {
         *buffer[0] = 0x00;
-        uart_puts("\r\nInvalid Minutes Value!");
+        buf_puts("\r\nInvalid Minutes Value!");
         break;
       } else {
         *buffer[0] = tens & ones;
       }
       bcm2835_i2c_write(MINS, *buffer);
-      uart_puts("\r\nType Seconds (two digits 00-59): ");
+      buf_puts("\r\nType Seconds (two digits 00-59): ");
       tens = ((buf_readc() - 48) << 4) | 0x0F;
-      uart_putc((tens >> 4) + 48);
+      buf_putc((tens >> 4) + 48);
       ones = (buf_readc() - 48) | 0xF0;
-      uart_putc((ones & 0x0F) + 48);
+      buf_putc((ones & 0x0F) + 48);
       if (BCDtoUint8(tens & ones) < 0 || BCDtoUint8(tens & ones) > 59) {
         *buffer[0] = 0x00;
-        uart_puts("\r\nInvalid Seconds Value!");
+        buf_puts("\r\nInvalid Seconds Value!");
         break;
       } else {
         *buffer[0] = tens & ones;
       }
       bcm2835_i2c_write(SECS, *buffer);
-      uart_puts("\r\nTime is now set.");
+      buf_puts("\r\nTime is now set.");
       bcm2835_i2c_end();
       break;
     case 'D' | 'd':
@@ -254,54 +243,54 @@ void TIME(void) {
 
       break;
     default:
-      uart_puts(MS4);
+      buf_puts(MS4);
       TIME();
       break;
   }
 }
 
 void ALARM(void) {
-  uart_puts("\r\nType ALARM (S)et or (D)isplay or (T)est\r\n");
+  buf_puts("\r\nType ALARM (S)et or (D)isplay or (T)est\r\n");
   uint8_t c = '\0';
   while (c == '\0') {
     c = buf_readc();
   }
   switch (c) {
     case 'S' | 's':
-      uart_puts("\r\nSet Seconds Alarm");
-      uart_puts("\r\nType Starting Alarm Seconds (two digits 05-59): ");
+      buf_puts("\r\nSet Seconds Alarm");
+      buf_puts("\r\nType Starting Alarm Seconds (two digits 05-59): ");
       tens = ((buf_readc() - 48) << 4) | 0x0F;
-      uart_putc((tens >> 4) + 48);
+      buf_putc((tens >> 4) + 48);
       ones = (buf_readc() - 48) | 0xF0;
-      uart_putc((ones & 0x0F) + 48);
+      buf_putc((ones & 0x0F) + 48);
       if (BCDtoUint8(tens & ones) < 5 || BCDtoUint8(tens & ones) > 59) {
         alarm[0] = 0x05;
-        uart_puts("\r\nInvalid Alarm Value, Value Reset to 5!");
+        buf_puts("\r\nInvalid Alarm Value, Value Reset to 5!");
         break;
       } else {
         alarm[0] = tens & ones;
-        uart_puts("\r\nAlarm is now set.");
+        buf_puts("\r\nAlarm is now set.");
       }
       break;
     case 'D' | 'd':
       ones = alarm[0] & 0x0F;
       tens = alarm[0] >> 4;
-      uart_putc(tens + 48);
-      uart_putc(ones + 48);
+      buf_putc(tens + 48);
+      buf_putc(ones + 48);
       break;
     case 'T' | 't':
       if (BCDtoUint8(alarm[0]) < 5 || BCDtoUint8(alarm[0]) > 59) {
-        uart_puts("\r\nAlarm Value Out of Range, Set to a Proper Value First!");
+        buf_puts("\r\nAlarm Value Out of Range, Set to a Proper Value First!");
         break;
       }
-      uart_puts("\r\nPlease wait, now testing Alarm...");
+      buf_puts("\r\nPlease wait, now testing Alarm...");
 
       // Engineer the code here to Drive the Pulse Width Modulated audio to the
       // speaker jack.
 
       break;
     default:
-      uart_puts(MS4);
+      buf_puts(MS4);
       ALARM();
       break;
   }
@@ -326,7 +315,7 @@ void CANCOM(void) {
   bcm2835_delayMicroseconds(150);
   bcm2835_gpio_write(RPI_GPIO_P1_15, HIGH);
 
-  uart_puts("\r\n(T)ransmit or (R)eceive\r\n");  // Choose to transmit or
+  buf_puts("\r\n(T)ransmit or (R)eceive\r\n");  // Choose to transmit or
                                                  // receive
   uint8_t c = '\0';
   while (c == '\0') {
@@ -345,7 +334,7 @@ void CANCOM(void) {
       break;
     }
     default:
-      uart_puts(MS4);
+      buf_puts(MS4);
       CANCOM;
       break;
   }
@@ -370,7 +359,7 @@ void RES(void) { reboot(); }
 
 void HELP(void)  // Command List
 {
-  uart_puts(
+  buf_puts(
       "\r\n(A)DC,(C)ancom,(D)ate,(H)elp,a(L)arm,(R)eset,(S)FT,(T)ime,(V)FP11");
 }
 
@@ -381,13 +370,13 @@ void SFT(void)  // Soft Floating Point Demo, optionally complete this command
   char a[20];
   char b[20];
   unsigned int c, d, result;
-  uart_puts("\r\nInput First Decimal Number eg. -0.04, 23.45, 1.89, -5.0");
+  buf_puts("\r\nInput First Decimal Number eg. -0.04, 23.45, 1.89, -5.0");
   // Get first input string here
-  uart_puts("\r\nInput Second Decimal Number eg. -0.04, 23.45, 1.89, -5.0");
+  buf_puts("\r\nInput Second Decimal Number eg. -0.04, 23.45, 1.89, -5.0");
   // Get second input string here
   c = ASCII_to_float32(a);
   d = ASCII_to_float32(b);
-  uart_puts("\r\nResults...");
+  buf_puts("\r\nResults...");
   result = float32_add(c, d);
   // print add result here
   result = float32_sub(c, d);
@@ -404,7 +393,7 @@ void VFP11(void)  // ARM Vector Floating Point Unit Demo, see softfloat.c for
 }
 
 void command(void) {
-  uart_puts(MS3);
+  buf_puts(MS3);
   uint8_t c = '\0';
   while (c == '\0') {
     c = buf_readc();
@@ -438,7 +427,7 @@ void command(void) {
       VFP11();
       break;
     default:
-      uart_puts(MS4);
+      buf_puts(MS4);
       HELP();
       break;
   }
@@ -455,8 +444,7 @@ int logon(void) {
 
 void String(void)
 {
-	sendingLongString = 1;
-	write_8_bytes_of_long_string_if_available();
+	buf_puts(longString);
 }
 
 void calc(void)
@@ -469,20 +457,18 @@ void kernel_main() {
   outRx = 0;
   inTx = 0;
   outTx = 0;
-  longStringTx = 0;
-  sendingLongString = 0;
 	
   volatile char c = '\0';
 	
   uart_init();
   enable_irq_57();
   enable_arm_irq();
-  uart_puts("TinyOS\n");
+  buf_puts("TinyOS\n\r");
 
   while (1) 
   {
     c = buf_readc();
-	uart_putc(c);	
+	buf_putc(c);	
     switch(c) {
       case 's':
         String();
@@ -493,42 +479,33 @@ void kernel_main() {
         break;
         				
       case 'x':
-        uart_putc('\n');
-        uart_putc('\n');
+        buf_putc('\n');
+        buf_putc('\n');
         break;
 				
       default:
-        uart_putc('0');
+        buf_putc('0');
         break;
     }
   }
 }
 
-void write_8_bytes_of_long_string_if_available(void) {
-  uart_disable_transmit_interrupt();
-  
-  volatile int completedString = 0;
-		
-  for (int i = 0; i < 8; i++) {
-    if (longString[longStringTx] == '\0') 
-    {
-      completedString = 1;
-      longStringTx = 0;
-      sendingLongString = 0;
-      break;
-    }
-    uart_putc(longString[longStringTx]);
-    longStringTx++;
+void buf_puts(const char* s)
+{
+    while (*s) {
+      	txA[inTx] = *s;
+		inTx++;
+		if (inTx >= BUFFER_LENGTH) {inTx = 0;}
   }
-		
-  if (completedString == 0)
-  {
-    uart_enable_transmit_interrupt();
-  }
-  else
-  {
-    uart_disable_transmit_interrupt();
-  }
+  software_handle_irq();
+}
+
+void buf_putc(char c)
+{
+	txA[inTx] = c;
+	inTx++;
+	if (inTx >= BUFFER_LENGTH) {inTx = 0;}
+	software_handle_irq();
 }
 
 char buf_readc(void)
@@ -541,14 +518,25 @@ char buf_readc(void)
 }
 
 void irq_handler(void) {
-  if (uart_check_buffer('r') != UART_BUFFER_EMPTY){
+  if (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
     while (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
       rxA[inRx] = uart_readc();
       inRx++;
       if (inRx >= BUFFER_LENGTH) {inRx = 0;}
     }
   }
-  else if ((uart_check_buffer('t') == UART_BUFFER_EMPTY) && sendingLongString) {
-    write_8_bytes_of_long_string_if_available();
+  else {
+    uart_disable_transmit_interrupt();
+    if (outTx != inTx) {
+		uart_putc(txA[outTx]);
+		outTx++;
+		if (outTx >= BUFFER_LENGTH) {outTx = 0;}
+	}
+    uart_enable_transmit_interrupt();
   }
+}
+
+void software_handle_irq(void)
+{
+	irq_handler();
 }
