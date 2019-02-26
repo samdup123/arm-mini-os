@@ -1,5 +1,7 @@
 #include "calc.h"
 
+#include "utils.h"
+
 calculator_expression_t parse_calc_expr(const char *const expression) {
   calculator_expression_t expr = {
       .a = -1,
@@ -25,6 +27,16 @@ calculator_expression_t parse_calc_expr(const char *const expression) {
   return expr;
 }
 
+#ifdef TEST_NO_ARM
+int add(int a, int b) { return a + b; }
+int sub(int a, int b) { return a - b; }
+int mul(int a, int b) { return a * b; }
+int div_remainder(int a, int b, int *remainder) {
+  *remainder = a % b;
+  return a / b;
+}
+#endif
+
 int calculate(const calculator_expression_t *expr, int *const remainder) {
   switch (expr->op) {
     case '+':
@@ -44,7 +56,7 @@ int calculator(int (*print_fn)(const char *, ...), char (*scan_char)()) {
   int bufferSize = 16;
   char buf[bufferSize];
   char c;
-  
+
   // print menu/instructions
   print_fn("\n\rEnter an expression: (a {+|-|*|/} b)");
 
@@ -64,19 +76,19 @@ int calculator(int (*print_fn)(const char *, ...), char (*scan_char)()) {
     for (int i = 0; i < bufferSize; i++) {
       buf[i] = '\0';
     }
-    
+
     // pull characters
     c = scan_char();
     for (int i = 0; i < bufferSize; i++) {
       if (c == '\r' || c == '\t') {
-		  break;
+        break;
       }
       print_fn("%c", c);
       buf[i] = c;
       c = scan_char();
     }
     print_fn("\n\r");
-    
+
     expr = parse_calc_expr(buf);
 
     // calculate & print result (inc. remainder for '/')

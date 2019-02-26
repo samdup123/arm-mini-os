@@ -1,8 +1,6 @@
 #ifndef CALC_H_
 #define CALC_H_
 
-#include "utils.h"
-
 // Represents an expression, including:
 //   - operand 'a'
 //   - operand 'b'
@@ -23,7 +21,6 @@ calculator_expression_t parse_calc_expr(const char *const expression);
 extern int add(int a, int b),  // --> a + b
     sub(int a, int b),         // --> a - b
     mul(int a, int b),         // --> a * b
-    // TODO: add assembly function for this
     div_remainder(int a, int b,
                   int *remainder);  // --> a / b, remainder=(a % b)
 

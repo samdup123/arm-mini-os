@@ -1,14 +1,9 @@
-#define LOGGING_USE_STDOUT 1
+#define TEST_NO_ARM 1
 #include "calc.h"
 #include "utils.h"
 
 #include <assert.h>
 #include <stddef.h>
-
-// replacments for ARM assembly functions:
-int add(int a, int b) { return a + b; }
-int sub(int a, int b) { return a - b; }
-int mul(int a, int b) { return a * b; }
 
 void atoi_test() {
   assert(atoi("32768") == 32768);

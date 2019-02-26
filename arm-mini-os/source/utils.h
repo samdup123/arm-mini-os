@@ -1,19 +1,21 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "die.h"
-
-#ifdef LOGGING_USE_STDOUT
+#ifdef TEST_NO_ARM
 #include <stdio.h>
+static void die_print_fn_substitute(const char* msg) {
+  printf("%s", msg ? msg : "");
+}
+#define DIE_PRINT_FN die_print_fn_substitute
 #define LOGGING_PRINTF_FUNC printf
-#define DIE_PRINT_FN printf
 #else
-#define LOGGING_USE_STDOUT 0
 #include "custom_printf.h"
 #include "uart.h"
 #define DIE_PRINT_FN uart_puts
 #define LOGGING_PRINTF_FUNC uart_printf
 #endif
+
+#include "die.h"
 
 #define nullptr 0
 

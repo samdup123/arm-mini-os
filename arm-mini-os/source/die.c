@@ -5,8 +5,7 @@
 void die(void (*print_fn)(const char*), const char* message) {
   const char* const msg = message ? message : "unspecified error";
   while (1) {
-    print_fn("\n\rfatal: ");
-    print_fn("stopping system and looping forever: ");
+    print_fn("\n\rfatal: stopping system and looping forever: ");
     print_fn(msg);
 
     /* delaying slightly */
