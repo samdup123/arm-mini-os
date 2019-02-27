@@ -3,8 +3,6 @@
 // debug everything that needs debugging
 // Add, remove, modify, preserve in order to fulfill project requirements.
 
-#include <stdint.h>
-#include <stdio.h>
 #include "bcm2835.h"
 #include "calc.h"
 #include "can.h"
@@ -13,7 +11,9 @@
 #include "mmio.h"
 #include "softfloat.h"
 #include "uart.h"
-#include "calc.h"
+
+#include <stdint.h>
+#include <stdio.h>
 
 #define SECS 0x00
 #define MINS 0x01
@@ -50,29 +50,31 @@ uint32_t N[200] = {
     46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 36, 35, 34, 33, 32, 31, 30, 29,
     28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 12, 11,
     10, 9,  8,  7,  6,  5,  4,  3,  2,  1};
-    
+
 #define BUFFER_LENGTH (256)
 
-char *longString = "The golden-headed cisticola is a small species, "
- "growing to 9–11.5 centimetres (3.5–4.5 in) long and weighing 6–10 "
- "grams (0.21–0.35 oz), with males slightly heavier than females. "
- "Although its appearance is similar to the black-backed cisticola "
- "(Cisticola eximius), the golden-headed cisticola has a shorter tail "
- "during the breeding season. The zitting cisticola (Cisticola juncidis) "
- "is also similar, but the \"rich golden\" head of the golden-headed cisticola "
- "is not present in the zitting cisticola. "
- "The male has several characteristics only present during the breeding season, "
- "including a golden body colour, a golden-orange head, and a dull chin. "
- "It also has a shorter tail; this may be a result of sexual selection as a shorter "
- "tail has been shown to improve male reproductive success. Females and males "
- "outside of the breeding season are similar in appearance, characterized by a "
- "cream-coloured underside and a brown upperside. They have streaks of black or "
- "dark brown on the upper part of their body, black wings, and a golden head. Aside "
- "from being lighter in color, juveniles are similar in appearance to adults. The "
- "head of the species is crested when vocalizing.";
+const char longString[] =
+    "The golden-headed cisticola is a small species, growing to 9–11.5 "
+    "centimetres (3.5–4.5 in) long and weighing 6–10 grams (0.21–0.35 oz), "
+    "with males slightly heavier than females. Although its appearance is "
+    "similar to the black-backed cisticola (Cisticola eximius), the "
+    "golden-headed cisticola has a shorter tail during the breeding season. "
+    "The zitting cisticola (Cisticola juncidis) is also similar, but the "
+    "\"rich golden\" head of the golden-headed cisticola is not present in the "
+    "zitting cisticola. The male has several characteristics only present "
+    "during the breeding season, including a golden body colour, a "
+    "golden-orange head, and a dull chin. It also has a shorter tail; this may "
+    "be a result of sexual selection as a shorter tail has been shown to "
+    "improve male reproductive success. Females and males outside of the "
+    "breeding season are similar in appearance, characterized by a "
+    "cream-coloured underside and a brown upperside. They have streaks of "
+    "black or dark brown on the upper part of their body, black wings, and a "
+    "golden head. Aside from being lighter in color, juveniles are similar in "
+    "appearance to adults. The head of the species is crested when vocalizing.";
+
 volatile int longStringTx = 0;
 volatile int sendingLongString = 0;
-				   
+
 volatile char txA[BUFFER_LENGTH];
 volatile char rxA[BUFFER_LENGTH];
 volatile int inRx = 0;
@@ -453,16 +455,12 @@ int logon(void) {
   return success;
 }
 
-void String(void)
-{
-	sendingLongString = 1;
-	write_8_bytes_of_long_string_if_available();
+void String(void) {
+  sendingLongString = 1;
+  write_8_bytes_of_long_string_if_available();
 }
 
-void calc(void)
-{
-	calculator(uart_printf, buf_readc);
-}
+void calc(void) { calculator(uart_printf, buf_readc); }
 
 void kernel_main() {
   inRx = 0;
@@ -471,32 +469,31 @@ void kernel_main() {
   outTx = 0;
   longStringTx = 0;
   sendingLongString = 0;
-	
+
   volatile char c = '\0';
-	
+
   uart_init();
   enable_irq_57();
   enable_arm_irq();
   uart_puts("TinyOS\n");
 
-  while (1) 
-  {
+  while (1) {
     c = buf_readc();
-	uart_putc(c);	
-    switch(c) {
+    uart_putc(c);
+    switch (c) {
       case 's':
         String();
         break;
-        
+
       case 'c':
         calc();
         break;
-        				
+
       case 'x':
         uart_putc('\n');
         uart_putc('\n');
         break;
-				
+
       default:
         uart_putc('0');
         break;
@@ -506,12 +503,11 @@ void kernel_main() {
 
 void write_8_bytes_of_long_string_if_available(void) {
   uart_disable_transmit_interrupt();
-  
+
   volatile int completedString = 0;
-		
+
   for (int i = 0; i < 8; i++) {
-    if (longString[longStringTx] == '\0') 
-    {
+    if (longString[longStringTx] == '\0') {
       completedString = 1;
       longStringTx = 0;
       sendingLongString = 0;
@@ -520,35 +516,36 @@ void write_8_bytes_of_long_string_if_available(void) {
     uart_putc(longString[longStringTx]);
     longStringTx++;
   }
-		
-  if (completedString == 0)
-  {
+
+  if (completedString == 0) {
     uart_enable_transmit_interrupt();
-  }
-  else
-  {
+  } else {
     uart_disable_transmit_interrupt();
   }
 }
 
-char buf_readc(void)
-{
-	while(outRx == inRx) {}
-	char c = rxA[outRx];
-	outRx++;
-	if (outRx >= BUFFER_LENGTH) {outRx = 0;}
-	return c;
+char buf_readc(void) {
+  while (outRx == inRx)
+    ;
+  char c = rxA[outRx];
+  outRx++;
+  if (outRx >= BUFFER_LENGTH) {
+    outRx = 0;
+  }
+  return c;
 }
 
 void irq_handler(void) {
-  if (uart_check_buffer('r') != UART_BUFFER_EMPTY){
+  if (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
     while (uart_check_buffer('r') != UART_BUFFER_EMPTY) {
       rxA[inRx] = uart_readc();
       inRx++;
-      if (inRx >= BUFFER_LENGTH) {inRx = 0;}
+      if (inRx >= BUFFER_LENGTH) {
+        inRx = 0;
+      }
     }
-  }
-  else if ((uart_check_buffer('t') == UART_BUFFER_EMPTY) && sendingLongString) {
+  } else if ((uart_check_buffer('t') == UART_BUFFER_EMPTY) &&
+             sendingLongString) {
     write_8_bytes_of_long_string_if_available();
   }
 }
