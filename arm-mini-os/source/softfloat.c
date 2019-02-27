@@ -36,6 +36,9 @@
  */
 
 #include "softfloat.h"
+#include <stdio.h>
+
+#define MAX_PRECISION (7)
 
 /*----------------------------------------------------------------------------
  | Returns 1 if the single-precision floating-point value `a' is a signaling
@@ -567,6 +570,197 @@ unsigned int ASCII_to_float32(char* in)  // Copyright 2014 Eugene Rockey
   return 0;
 }
 
-const char* float32_to_ASCII(float32 r) {
-  return "Engineer and fully comment this function.";
+
+static void reverse(char *s, int len) {
+    int i = 0;
+    int j = len -1;
+    int temp;
+    while(i<j) {
+        temp = s[i];
+        s[i] = s[j];
+        s[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+static void print_binary(int x, int size) {
+    if (size == 4) {
+      x = x & 0b1111111111111111111111111111111;
+    }
+    else {
+      x = x & 0b11111111;
+    }
+    char buf[33];
+    char *ptr = buf;
+    int numDigs = 0;
+
+    while (x > 0) {
+        *ptr++ = (x & 1) ? '1' : '0';
+        numDigs++;
+        x/=2;
+    }
+    reverse(buf, numDigs);
+    *ptr = '\0';
+    printf("%s\n", buf);
+}
+
+static int reverse_binary(int v) {
+    v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
+    // swap consecutive pairs
+    v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
+    // swap nibbles ... 
+    v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
+    // swap bytes
+    v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+    // swap 2-byte long pairs
+    v = ( v >> 16             ) | ( v               << 16);
+    return v;
+}
+
+static int clear_zeros(int d) {
+    int count = 0;
+    while ((d & 1) == 0 && count <= 32) {
+        d = d >> 1;
+    }
+
+    return d;
+}
+
+static int _pow(int base, int exp) {
+    int new = 1;
+    for(int i = 0; i < exp; i++) {
+        new *= base;
+    }
+    return new;
+}
+
+//this takes a very spefically formatted number
+// f should be a (backwards) binary fraction
+// .125 = .001 base 2
+// if you have the binary fraction for .125
+// then f should be binary 100 (the reverse of 001)
+// (remember, not decimal 100, but binary 100)
+static int frac_binary_decimal_frac(int f, int *leadingZeros) {
+
+    float ff = 0;
+    int i = 1;
+    while(f > 0) {  
+        printf("\tff %f\n", ff);
+        ff += (f&1) / (0.0 + (_pow(2, i)));
+        f = f >> 1;
+        i++;
+    }
+
+    *leadingZeros = 0;
+
+    i--;
+    for(int c = 0; i > 0 && c < MAX_PRECISION; c++) {   
+        ff = ff * 10;
+        i--;
+
+        printf("\t\t %d %d\n", ((int)ff), ((int)ff) == 0);
+        if (((int)ff) == 0) {
+          *leadingZeros = *leadingZeros + 1;
+        }
+
+        printf("\tffi  %f\n", ff);
+    }
+
+    return (int)ff;
+}
+
+static int int_into_string(int d, char *buf) {
+    char *ptr = buf;
+    int i = 0;
+    while(d>0) {
+        *ptr++ = (d%10) + '0';
+        d/=10;
+        i++;
+    }
+    *ptr = '\0';
+
+    return i;
+}
+
+void float32_to_ASCII(float32 f, char *buf) {
+    printf("%d binary ", f);
+    print_binary(f, sizeof(int));
+    char exp = (char)((f >> 23) & 0b11111111);
+    printf("the exp  %d  ", exp);
+    print_binary(exp, sizeof(char));
+
+    char actual_exp = (char)(exp - 127);
+
+    printf("the actual exp  %d  ", actual_exp);
+    print_binary(actual_exp, sizeof(char));
+
+    int sign = ((f >> 23) & 0b100000000) >> 8;
+    int base = ((f & 0b111111111111111111111111) | 0b100000000000000000000000);
+
+    printf("before clearing zeros  ");
+    print_binary(base, sizeof(int));
+
+    int b = clear_zeros(reverse_binary(base));
+
+    printf("after clearing zeros  ");
+    print_binary(b, sizeof(int));
+
+    int intPart = 0;
+    int numDigsIntPart = 0;
+
+    // if the exp is greater than zero then get the integer part
+    if (actual_exp > 0) {
+      for (int i = 0; i < actual_exp + 1; i++) {
+          intPart = intPart << 1;
+          intPart = intPart | (b & 1);
+          b = b >> 1;
+      }
+    }
+
+    // if the exponent is less than zero then add the zeros back in
+    if (actual_exp < 0) {
+      b = b << (-actual_exp) - 1;
+    }
+
+    printf("the int part %d\n", intPart);
+
+    printf("binary of frac part  ");
+    print_binary(b, sizeof(int));
+
+    int leadingZerosOfFracPart = 0;
+    int fracPart = frac_binary_decimal_frac(b, &leadingZerosOfFracPart);
+
+    printf("decimal frac part %d  leading zeros%d\n", fracPart, leadingZerosOfFracPart);
+
+    char *newBuf;
+
+    if (sign == 1) {
+      buf[0] = '-';
+      newBuf = &buf[1];
+    }
+    else {
+      newBuf = buf;
+    }
+
+    int lengthOfIntPart = int_into_string(intPart, newBuf);
+    reverse(buf, lengthOfIntPart);
+
+    printf("%s\n", buf);
+
+    newBuf[lengthOfIntPart] = '.';
+    newBuf[lengthOfIntPart + 1] = '\0';
+
+
+    printf("%s\n", buf);
+
+    newBuf = &newBuf[lengthOfIntPart + 1];
+    for (int i = 0; i < leadingZerosOfFracPart; i++) {
+      *newBuf++ = '0';
+    }
+
+    int lengthOfFractionalPart = int_into_string(fracPart, newBuf);
+    reverse(newBuf, lengthOfFractionalPart);
+
+    printf("%s\n", buf);
 }

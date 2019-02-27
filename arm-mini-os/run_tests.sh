@@ -6,11 +6,12 @@ set -e
 set -x
 
 gcc \
-  test/calc_unittest.c \
+  test/softfloat_unittest.c \
   -I./source \
     source/utils.c \
     source/calc.c \
     source/die.c \
+    source/softfloat.c \
   -DTEST_NO_ARM \
   -o "${TEST_EXECUTABLE}"
 
