@@ -6,7 +6,7 @@ set -e
 set -x
 
 gcc \
-  test/softfloat_unittest.c \
+  test/calc_unittest.c \
   -I./source \
     source/utils.c \
     source/calc.c \

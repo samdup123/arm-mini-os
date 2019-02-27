@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
-#include <stdio.h>
 
 #define str_to_i  ASCII_to_float32
 #define cut float32_to_ASCII
