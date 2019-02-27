@@ -98,6 +98,8 @@ void disable_arm_fiq();
 void reboot();
 void enable_irq_57();
 void disable_irq_57();
+extern void armVfp11Mvfr0();
+extern void armVfp11HwInit();
 void testdelay();
 extern int invar;  // assembly variables
 extern int outvar;
@@ -475,6 +477,8 @@ void kernel_main() {
   uart_init();
   enable_irq_57();
   enable_arm_irq();
+  armVfp11Mvfr0();
+  armVfp11HwInit();
   uart_puts("TinyOS\n");
 
   while (1) {

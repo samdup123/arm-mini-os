@@ -4,10 +4,12 @@
 
 #include <arch/assembler.h>
 
+.global armVfp11Mvfr0
 armVfp11Mvfr0:
     FMRX    R0, MVFR0
     BX      LR
 
+.global armVfp11HwInit
 armVfp11HwInit:
     /* NSACR: Non-secure Access Control Register                            */
     MRC     p15, 0, R0, c1, c1, 2       /* R0 = NSACR                       */
