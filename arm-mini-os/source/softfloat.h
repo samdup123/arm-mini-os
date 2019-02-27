@@ -124,7 +124,7 @@ flag float32_is_signaling_nan(float32);
 
 // Eugene's Operations
 unsigned int ASCII_to_float32(char*);
-const char* float32_to_ASCII(float32);
+void float32_to_ASCII(float32, char*);
 
 /*----------------------------------------------------------------------------
  | Symbolic Boolean literals.

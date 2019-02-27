@@ -11,6 +11,7 @@ gcc \
     source/utils.c \
     source/calc.c \
     source/die.c \
+    source/softfloat.c \
   -DTEST_NO_ARM \
   -o "${TEST_EXECUTABLE}"
 

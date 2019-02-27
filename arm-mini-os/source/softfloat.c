@@ -37,6 +37,8 @@
 
 #include "softfloat.h"
 
+#define MAX_PRECISION (7)
+
 /*----------------------------------------------------------------------------
  | Returns 1 if the single-precision floating-point value `a' is a signaling
  | NaN; otherwise returns 0.
@@ -567,6 +569,209 @@ unsigned int ASCII_to_float32(char* in)  // Copyright 2014 Eugene Rockey
   return 0;
 }
 
-const char* float32_to_ASCII(float32 r) {
-  return "Engineer and fully comment this function.";
+// reverses a string
+// "hey" -> "yeh"
+static void reverse(char *s, int len) {
+    int i = 0;
+    int j = len -1;
+    int temp;
+    while(i<j) {
+        temp = s[i];
+        s[i] = s[j];
+        s[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+// prints a binary number
+// static void print_binary(int x, int size) {
+//     if (size == 4) {
+//       x = x & 0b1111111111111111111111111111111;
+//     }
+//     else {
+//       x = x & 0b11111111;
+//     }
+//     char buf[33];
+//     char *ptr = buf;
+//     int numDigs = 0;
+
+//     while (x > 0) {
+//         *ptr++ = (x & 1) ? '1' : '0';
+//         numDigs++;
+//         x/=2;
+//     }
+//     reverse(buf, numDigs);
+//     *ptr = '\0';
+//     printf("%s\n", buf);
+// }
+
+// literally reverses a binary number
+// 0b11010001 -> 0b10001011 **
+// ** it might add more padding 
+//    zeros to the front of the number
+static int reverse_binary(int v) {
+    v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
+    // swap consecutive pairs
+    v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
+    // swap nibbles ... 
+    v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
+    // swap bytes
+    v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+    // swap 2-byte long pairs
+    v = ((v >> 16)&0b00000000000000001111111111111111) | ( v << 16);
+
+    return v;
+}
+
+// clears out the zeros from the bottom of a binary num
+// 0b1110100 -> 0b11101
+static int clear_zeros(int d) {
+    int count = 0;
+    while ((d & 1) == 0 && count <= 32) {
+        d = (d >> 1) & 0x7FFFFFFF;
+    }
+
+    return d;
+}
+
+// takes the base to an exponent
+// _pow(2, 3) = 8
+static int _pow(int base, int exp) {
+    int new = 1;
+    for(int i = 0; i < exp; i++) {
+        new *= base;
+    }
+    return new;
+}
+
+//!! this takes a very specifically formatted number
+// f should be a (backwards) binary fraction
+// .125 = .001 base 2
+// if you have the binary fraction for .125
+// then f should be binary 100 (the reverse of 001)
+// (remember, not decimal 100, but binary 100)
+static int binary_frac_to_decimal_frac(int f, int *leadingZeros) {
+
+    float ff = 0;
+    int i = 1;
+    while(f > 0) {  
+        ff += (f&1) / (0.0 + (_pow(2, i)));
+        f = f >> 1;
+        i++;
+    }
+
+    *leadingZeros = 0;
+
+    i--;
+    for(int c = 0; i > 0 && c < MAX_PRECISION; c++) {   
+        ff = ff * 10;
+        i--;
+
+        if (((int)ff) == 0) {
+          *leadingZeros = *leadingZeros + 1;
+        }
+    }
+
+    return (int)ff;
+}
+
+// example: if d = 145 then 
+// at the end buff will contain
+// "145\0"
+static int int_into_string(int d, char *buf) {
+    char *ptr = buf;
+    int i = 0;
+    while(d>0) {
+        *ptr++ = (d%10) + '0';
+        d/=10;
+        i++;
+    }
+    *ptr = '\0';
+    reverse(buf, i);
+
+    return i;
+}
+
+void float32_to_ASCII(float32 f, char *buf) {
+    char exp = (char)((f >> 23) & 0b11111111);
+
+    char actual_exp = (char)(exp - 127);
+
+    int sign = ((f >> 23) & 0b100000000) >> 8;
+    int base = ((f & 0b111111111111111111111111) | 0b100000000000000000000000);
+
+    int b = clear_zeros(reverse_binary(base));
+
+    unsigned int intPart = 0;
+    int numDigsIntPart = 0;
+
+    // if the exp is greater than zero then get the integer part
+    if (actual_exp > 0) {
+      for (int i = 0; i < actual_exp + 1; i++) {
+          intPart = intPart << 1;
+          intPart = intPart | (b & 1);
+          b = b >> 1;
+      }
+    }
+    // if the exp is zero then the int part is just 1
+    // due to the implicit 1 at the beginning of the 22 digit mantissa
+    else if (actual_exp == 0) {
+      intPart = 1;
+      b = b >> 1;
+    }
+    // else the int part is definitely just zero
+
+
+    // if the exponent is less than zero then add the zeros back in
+    // remember that the number is binary reversed right now
+    // so to add zeros to the top of the number (>>)
+    // you add them to the bottom of the reversed number (<<)
+    // now you see why the number is reversed
+    if (actual_exp < 0) {
+      b = b << (-actual_exp) - 1;
+    }
+
+    int leadingZerosOfFracPart = 0;
+    unsigned int fracPart = binary_frac_to_decimal_frac(b, &leadingZerosOfFracPart);
+
+    char *bufPtr;
+
+    // add a negative sign if the number is negative
+    if (sign == 1) {
+      buf[0] = '-';
+      // advance the pointer
+      bufPtr = &buf[1];
+    }
+    else {
+      bufPtr = buf;
+    }
+
+    // add the int part into the string
+    // if the input number was 7.125
+    // this next line would be adding a `7`
+    //  to the string buffer
+    int lengthOfIntPart = int_into_string(intPart, bufPtr);
+
+    // advance the pointer
+    bufPtr = &bufPtr[lengthOfIntPart];
+
+    if (fracPart > 0) {
+
+      // add the decimal point and advance the pointer
+      *bufPtr++ = '.';
+      // add a \0 just in case
+      *bufPtr = '\0';
+
+      for (int i = 0; i < leadingZerosOfFracPart; i++) {
+        // put a zero in the string and advance the pointer
+        *bufPtr++ = '0';
+      }
+
+      // add the fractional part into the string
+      // if the input number was 7.125
+      // this next line would be adding `125`
+      //  to the string buffer
+      int_into_string(fracPart, bufPtr);
+    }
 }
