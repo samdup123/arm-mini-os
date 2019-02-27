@@ -132,26 +132,3 @@ vfp11_add:
 		FADDS	s2, s2, s1	
 		FMRS	r0, s2
 		MOV	pc, lr
-
-.global enable_vfp
-enable_vfp:
-
-UNDEF_VECTOR    EQU     0x4 ; address of undefined instruction vector
-                            ; (hivecs not handled)
-Install_VFPHandler FUNCTION
-        ; Install VFP handler onto undefined instruction
-
-; TLUndef_Handler must be reachable via BL from UNDEF_VECTOR.
-        ADR     r0, TLUndef_Handler_Offset
-        LDR     r1, [r0]
-        ADD     r0, r0, r1
-        SUB     r0, r0, #UNDEF_VECTOR+8 ; allow for vector address and PC offset
-        MOV     r0, r0, LSR #2
-        ORR     r0, r0, #0xea000000     ; bit pattern for Branch always
-        MOV     r1, #UNDEF_VECTOR
-
-        STR     r0, [r1]
-        BX      LR                           ; return from subroutine
-TLUndef_Handler_Offset
-        DCD     TLUndef_Handler - TLUndef_Handler_Offset
-        ENDFUNC
