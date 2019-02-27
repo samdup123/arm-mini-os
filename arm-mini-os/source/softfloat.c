@@ -569,7 +569,8 @@ unsigned int ASCII_to_float32(char* in)  // Copyright 2014 Eugene Rockey
   return 0;
 }
 
-
+// reverses a string
+// "hey" -> "yeh"
 static void reverse(char *s, int len) {
     int i = 0;
     int j = len -1;
@@ -583,6 +584,7 @@ static void reverse(char *s, int len) {
     }
 }
 
+// prints a binary number
 // static void print_binary(int x, int size) {
 //     if (size == 4) {
 //       x = x & 0b1111111111111111111111111111111;
@@ -604,33 +606,37 @@ static void reverse(char *s, int len) {
 //     printf("%s\n", buf);
 // }
 
+// literally reverses a binary number
+// 0b11010001 -> 0b10001011 **
+// ** it might add more padding 
+//    zeros to the front of the number
 static int reverse_binary(int v) {
     v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
-
     // swap consecutive pairs
     v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
-
     // swap nibbles ... 
     v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
-
     // swap bytes
     v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
-
     // swap 2-byte long pairs
     v = ((v >> 16)&0b00000000000000001111111111111111) | ( v << 16);
 
     return v;
 }
 
+// clears out the zeros from the bottom of a binary num
+// 0b1110100 -> 0b11101
 static int clear_zeros(int d) {
     int count = 0;
     while ((d & 1) == 0 && count <= 32) {
-        d = d >> 1;
+        d = (d >> 1) & 0x7FFFFFFF;
     }
 
     return d;
 }
 
+// takes the base to an exponent
+// _pow(2, 3) = 8
 static int _pow(int base, int exp) {
     int new = 1;
     for(int i = 0; i < exp; i++) {
@@ -639,7 +645,7 @@ static int _pow(int base, int exp) {
     return new;
 }
 
-//this takes a very spefically formatted number
+//!! this takes a very specifically formatted number
 // f should be a (backwards) binary fraction
 // .125 = .001 base 2
 // if you have the binary fraction for .125
@@ -670,6 +676,9 @@ static int frac_binary_decimal_frac(int f, int *leadingZeros) {
     return (int)ff;
 }
 
+// example: if d = 145 then 
+// at the end buff will contain
+// "145\0"
 static int int_into_string(int d, char *buf) {
     char *ptr = buf;
     int i = 0;
@@ -679,6 +688,7 @@ static int int_into_string(int d, char *buf) {
         i++;
     }
     *ptr = '\0';
+    reverse(buf, i);
 
     return i;
 }
@@ -693,7 +703,7 @@ void float32_to_ASCII(float32 f, char *buf) {
 
     int b = clear_zeros(reverse_binary(base));
 
-    int intPart = 0;
+    unsigned int intPart = 0;
     int numDigsIntPart = 0;
 
     // if the exp is greater than zero then get the integer part
@@ -704,17 +714,29 @@ void float32_to_ASCII(float32 f, char *buf) {
           b = b >> 1;
       }
     }
+    // if the exp is zero then there is no frac part
+    else if (actual_exp == 0) {
+      intPart = 1;
+      b = b >> 1;
+    }
+    // else the int part is definitely just zero
+
 
     // if the exponent is less than zero then add the zeros back in
+    // remember that the number is binary reversed right now
+    // so to add zeros to the top of the number (>>)
+    // you add them to the bottom of the reversed number (<<)
+    // now you see why the number is reversed
     if (actual_exp < 0) {
       b = b << (-actual_exp) - 1;
     }
 
     int leadingZerosOfFracPart = 0;
-    int fracPart = frac_binary_decimal_frac(b, &leadingZerosOfFracPart);
+    unsigned int fracPart = frac_binary_decimal_frac(b, &leadingZerosOfFracPart);
 
     char *newBuf;
 
+    // add a negative sign if the number is negative
     if (sign == 1) {
       buf[0] = '-';
       newBuf = &buf[1];
@@ -723,17 +745,22 @@ void float32_to_ASCII(float32 f, char *buf) {
       newBuf = buf;
     }
 
+    // add the int part into the string
+    // if the input number was 7.125
+    // this next line would be adding a 7
+    //  to the string buffer
     int lengthOfIntPart = int_into_string(intPart, newBuf);
-    reverse(newBuf, lengthOfIntPart);
+    newBuf = &newBuf[lengthOfIntPart];
 
-    newBuf[lengthOfIntPart] = '.';
-    newBuf[lengthOfIntPart + 1] = '\0';
+    if (fracPart > 0) {
 
-    newBuf = &newBuf[lengthOfIntPart + 1];
-    for (int i = 0; i < leadingZerosOfFracPart; i++) {
-      *newBuf++ = '0';
+      // add the decimal point
+      *newBuf++ = '.';
+
+      for (int i = 0; i < leadingZerosOfFracPart; i++) {
+        *newBuf++ = '0';
+      }
+
+      int lengthOfFractionalPart = int_into_string(fracPart, newBuf);
     }
-
-    int lengthOfFractionalPart = int_into_string(fracPart, newBuf);
-    reverse(newBuf, lengthOfFractionalPart);
 }

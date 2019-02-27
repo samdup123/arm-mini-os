@@ -12,6 +12,7 @@
 
 void float32_to_ASCII_test() {
     char buf[40];
+    
     cut(str_to_i("7.125"), buf);
     assert(0 == strcmp(buf, "7.125"));
 
@@ -38,6 +39,22 @@ void float32_to_ASCII_test() {
 
     cut(str_to_i("-237.034"), buf);
     assert(0 == strcmp(buf, "-237.0339965"));
+
+    // -1.0
+    cut(0b00111111100000000000000000000000, buf);
+    assert(0 == strcmp(buf, "1"));
+
+    // -1.0
+    cut(0b10111111100000000000000000000000, buf);
+    assert(0 == strcmp(buf, "-1"));
+
+    // -2.0
+    cut(0b11000000000000000000000000000000, buf);
+    assert(0 == strcmp(buf, "-2"));
+
+    // .5
+    cut(0b00111111000000000000000000000000, buf);
+    assert(0 == strcmp(buf, ".5"));
 }
 
 // RUN ALL TESTS:
@@ -59,7 +76,7 @@ int main() {
     printf(ANSI_COLOR_GREEN "✔ Success" ANSI_COLOR_RESET "\n");
   }
 
-  if (num_tests < 1)
+  if (num_tests < 1)    
     printf("No tests found.");
   else
     printf(ANSI_COLOR_GREEN "All tests successful.\n" ANSI_COLOR_RESET);
