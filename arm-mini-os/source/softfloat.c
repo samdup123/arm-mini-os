@@ -714,7 +714,8 @@ void float32_to_ASCII(float32 f, char *buf) {
           b = b >> 1;
       }
     }
-    // if the exp is zero then there is no frac part
+    // if the exp is zero then the int part is just 1
+    // due to the implicit 1 at the beginning of the 22 digit mantissa
     else if (actual_exp == 0) {
       intPart = 1;
       b = b >> 1;
@@ -734,33 +735,43 @@ void float32_to_ASCII(float32 f, char *buf) {
     int leadingZerosOfFracPart = 0;
     unsigned int fracPart = binary_frac_to_decimal_frac(b, &leadingZerosOfFracPart);
 
-    char *newBuf;
+    char *bufPtr;
 
     // add a negative sign if the number is negative
     if (sign == 1) {
       buf[0] = '-';
-      newBuf = &buf[1];
+      // advance the pointer
+      bufPtr = &buf[1];
     }
     else {
-      newBuf = buf;
+      bufPtr = buf;
     }
 
     // add the int part into the string
     // if the input number was 7.125
-    // this next line would be adding a 7
+    // this next line would be adding a `7`
     //  to the string buffer
-    int lengthOfIntPart = int_into_string(intPart, newBuf);
-    newBuf = &newBuf[lengthOfIntPart];
+    int lengthOfIntPart = int_into_string(intPart, bufPtr);
+
+    // advance the pointer
+    bufPtr = &bufPtr[lengthOfIntPart];
 
     if (fracPart > 0) {
 
-      // add the decimal point
-      *newBuf++ = '.';
+      // add the decimal point and advance the pointer
+      *bufPtr++ = '.';
+      // add a \0 just in case
+      *bufPtr = '\0';
 
       for (int i = 0; i < leadingZerosOfFracPart; i++) {
-        *newBuf++ = '0';
+        // put a zero in the string and advance the pointer
+        *bufPtr++ = '0';
       }
 
-      int lengthOfFractionalPart = int_into_string(fracPart, newBuf);
+      // add the fractional part into the string
+      // if the input number was 7.125
+      // this next line would be adding `125`
+      //  to the string buffer
+      int_into_string(fracPart, bufPtr);
     }
 }
