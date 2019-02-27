@@ -26,9 +26,18 @@ void float32_to_ASCII_test() {
     cut(0b10111101010011001100110011001100, buf);
     assert(0 == strcmp(buf, "-.0499999"));
 
-    // cut(str_to_i("7.034"), buf);
-    // printf("\n\n%s\n", buf);
-   // assert(0 == strcmp(buf, "7.034"));
+    // .00625
+    cut(0b00111011110011001100110011001100, buf);
+    assert(0 == strcmp(buf, ".0062499"));
+
+    cut(str_to_i("7.034"), buf);
+    assert(0 == strcmp(buf, "7.0339994"));
+
+    cut(str_to_i("-7.034"), buf);
+    assert(0 == strcmp(buf, "-7.0339994"));
+
+    cut(str_to_i("-237.034"), buf);
+    assert(0 == strcmp(buf, "-237.0339965"));
 }
 
 // RUN ALL TESTS:

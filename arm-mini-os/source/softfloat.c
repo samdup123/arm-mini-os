@@ -36,7 +36,6 @@
  */
 
 #include "softfloat.h"
-#include <stdio.h>
 
 #define MAX_PRECISION (7)
 
@@ -584,37 +583,42 @@ static void reverse(char *s, int len) {
     }
 }
 
-static void print_binary(int x, int size) {
-    if (size == 4) {
-      x = x & 0b1111111111111111111111111111111;
-    }
-    else {
-      x = x & 0b11111111;
-    }
-    char buf[33];
-    char *ptr = buf;
-    int numDigs = 0;
+// static void print_binary(int x, int size) {
+//     if (size == 4) {
+//       x = x & 0b1111111111111111111111111111111;
+//     }
+//     else {
+//       x = x & 0b11111111;
+//     }
+//     char buf[33];
+//     char *ptr = buf;
+//     int numDigs = 0;
 
-    while (x > 0) {
-        *ptr++ = (x & 1) ? '1' : '0';
-        numDigs++;
-        x/=2;
-    }
-    reverse(buf, numDigs);
-    *ptr = '\0';
-    printf("%s\n", buf);
-}
+//     while (x > 0) {
+//         *ptr++ = (x & 1) ? '1' : '0';
+//         numDigs++;
+//         x/=2;
+//     }
+//     reverse(buf, numDigs);
+//     *ptr = '\0';
+//     printf("%s\n", buf);
+// }
 
 static int reverse_binary(int v) {
     v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
+
     // swap consecutive pairs
     v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
+
     // swap nibbles ... 
     v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
+
     // swap bytes
     v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+
     // swap 2-byte long pairs
-    v = ( v >> 16             ) | ( v               << 16);
+    v = ((v >> 16)&0b00000000000000001111111111111111) | ( v << 16);
+
     return v;
 }
 
@@ -646,7 +650,6 @@ static int frac_binary_decimal_frac(int f, int *leadingZeros) {
     float ff = 0;
     int i = 1;
     while(f > 0) {  
-        printf("\tff %f\n", ff);
         ff += (f&1) / (0.0 + (_pow(2, i)));
         f = f >> 1;
         i++;
@@ -659,12 +662,9 @@ static int frac_binary_decimal_frac(int f, int *leadingZeros) {
         ff = ff * 10;
         i--;
 
-        printf("\t\t %d %d\n", ((int)ff), ((int)ff) == 0);
         if (((int)ff) == 0) {
           *leadingZeros = *leadingZeros + 1;
         }
-
-        printf("\tffi  %f\n", ff);
     }
 
     return (int)ff;
@@ -684,27 +684,14 @@ static int int_into_string(int d, char *buf) {
 }
 
 void float32_to_ASCII(float32 f, char *buf) {
-    printf("%d binary ", f);
-    print_binary(f, sizeof(int));
     char exp = (char)((f >> 23) & 0b11111111);
-    printf("the exp  %d  ", exp);
-    print_binary(exp, sizeof(char));
 
     char actual_exp = (char)(exp - 127);
-
-    printf("the actual exp  %d  ", actual_exp);
-    print_binary(actual_exp, sizeof(char));
 
     int sign = ((f >> 23) & 0b100000000) >> 8;
     int base = ((f & 0b111111111111111111111111) | 0b100000000000000000000000);
 
-    printf("before clearing zeros  ");
-    print_binary(base, sizeof(int));
-
     int b = clear_zeros(reverse_binary(base));
-
-    printf("after clearing zeros  ");
-    print_binary(b, sizeof(int));
 
     int intPart = 0;
     int numDigsIntPart = 0;
@@ -723,15 +710,8 @@ void float32_to_ASCII(float32 f, char *buf) {
       b = b << (-actual_exp) - 1;
     }
 
-    printf("the int part %d\n", intPart);
-
-    printf("binary of frac part  ");
-    print_binary(b, sizeof(int));
-
     int leadingZerosOfFracPart = 0;
     int fracPart = frac_binary_decimal_frac(b, &leadingZerosOfFracPart);
-
-    printf("decimal frac part %d  leading zeros%d\n", fracPart, leadingZerosOfFracPart);
 
     char *newBuf;
 
@@ -744,15 +724,10 @@ void float32_to_ASCII(float32 f, char *buf) {
     }
 
     int lengthOfIntPart = int_into_string(intPart, newBuf);
-    reverse(buf, lengthOfIntPart);
-
-    printf("%s\n", buf);
+    reverse(newBuf, lengthOfIntPart);
 
     newBuf[lengthOfIntPart] = '.';
     newBuf[lengthOfIntPart + 1] = '\0';
-
-
-    printf("%s\n", buf);
 
     newBuf = &newBuf[lengthOfIntPart + 1];
     for (int i = 0; i < leadingZerosOfFracPart; i++) {
@@ -761,6 +736,4 @@ void float32_to_ASCII(float32 f, char *buf) {
 
     int lengthOfFractionalPart = int_into_string(fracPart, newBuf);
     reverse(newBuf, lengthOfFractionalPart);
-
-    printf("%s\n", buf);
 }
