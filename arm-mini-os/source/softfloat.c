@@ -651,7 +651,7 @@ static int _pow(int base, int exp) {
 // if you have the binary fraction for .125
 // then f should be binary 100 (the reverse of 001)
 // (remember, not decimal 100, but binary 100)
-static int frac_binary_decimal_frac(int f, int *leadingZeros) {
+static int binary_frac_to_decimal_frac(int f, int *leadingZeros) {
 
     float ff = 0;
     int i = 1;
@@ -732,7 +732,7 @@ void float32_to_ASCII(float32 f, char *buf) {
     }
 
     int leadingZerosOfFracPart = 0;
-    unsigned int fracPart = frac_binary_decimal_frac(b, &leadingZerosOfFracPart);
+    unsigned int fracPart = binary_frac_to_decimal_frac(b, &leadingZerosOfFracPart);
 
     char *newBuf;
 
